@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 require('dotenv').config();
+require('./database/migrate');
 
 const app = express();
 
@@ -22,3 +23,4 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Servidor ativo na porta ${port}`);
 });
+
