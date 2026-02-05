@@ -1,3 +1,5 @@
+<% layout('layout') %>
+
 <section class="auth">
   <div class="card auth-card">
     <h1>Entrar</h1>
@@ -5,16 +7,12 @@
 
     <form method="POST" action="/login" class="form">
       <label class="label">Email</label>
-      <input class="input" type="email" name="email" required placeholder="admin@campodogado.local" />
+      <input class="input" type="email" name="email" required />
 
       <label class="label">Senha</label>
-      <input class="input" type="password" name="password" required placeholder="••••••••" />
+      <input class="input" type="password" name="password" required />
 
       <button class="btn btn-primary" type="submit">Entrar</button>
-
-      <div class="hint">
-        <strong>Admin padrão:</strong> admin@campodogado.local / admin123
-      </div>
     </form>
   </div>
 </section>
