@@ -3,9 +3,13 @@ require("./database/migrate");
 
 const express = require("express");
 const path = require("path");
+
 const session = require("express-session");
 const flash = require("connect-flash");
-const engine = require("ejs-mate");
+
+const SQLiteStoreFactory = require("better-sqlite3-session-store");
+const db = require("./database/db");
+const SQLiteStore = SQLiteStoreFactory(session);
 
 const { requireLogin } = require("./modules/auth/auth.middleware");
 
@@ -14,27 +18,31 @@ const authRoutes = require("./modules/auth/auth.routes");
 const comprasRoutes = require("./modules/compras/compras.routes");
 const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
-
-// ⚠️ se ainda NÃO existe, comente esta linha por enquanto:
-// const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
+const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
 const app = express();
 
+// body
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ✅ EJS + Layout engine
-app.engine("ejs", engine);
+// views
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-// ✅ estáticos (CSS/JS/IMG)
+// estáticos
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ sessão + flash (ANTES das rotas)
-app.set("trust proxy", 1); // Railway proxy
+// sessão + flash (ANTES das rotas)
 app.use(
   session({
+    store: new SQLiteStore({
+      client: db,
+      expired: {
+        clear: true,
+        intervalMs: 24 * 60 * 60 * 1000, // limpa 1x ao dia
+      },
+    }),
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
@@ -48,7 +56,7 @@ app.use(
 
 app.use(flash());
 
-// ✅ vars globais p/ views
+// vars globais p/ views
 app.use((req, res, next) => {
   res.locals.user = req.session?.user || null;
   res.locals.flash = {
@@ -58,30 +66,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ auth primeiro
+// auth primeiro
 app.use(authRoutes);
 
-// ✅ módulos
+// módulos do sistema
 app.use(comprasRoutes);
 app.use(estoqueRoutes);
 app.use(osRoutes);
-// app.use(usuariosRoutes); // habilite quando o módulo existir
+app.use(usuariosRoutes);
 
-// ✅ home
+// home
 app.get("/", (req, res) => {
   if (req.session?.user) return res.redirect("/dashboard");
   return res.redirect("/login");
 });
 
-// ✅ dashboard com layout
+// dashboard protegido
 app.get("/dashboard", requireLogin, (req, res) => {
-  return res.render("dashboard/index", {
-    layout: "layout",
-    title: "Dashboard",
-  });
+  return res.render("dashboard/index", { title: "Dashboard" });
 });
 
-// ✅ health
+// health
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
@@ -90,20 +95,16 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// ❗ Middleware de erro (DEV / Railway)
-app.use((err, req, res, next) => {
+// 404 simples (evita “Internal Server Error” por rota inexistente)
+app.use((req, res) => {
+  return res.status(404).render("errors/404", { title: "Não encontrado" });
+});
+
+// erro padrão
+app.use((err, req, res, _next) => {
   console.error("🔥 ERRO 500:", err);
-
-  if (process.env.NODE_ENV === "production") {
-    return res.status(500).send("Erro interno no servidor");
-  }
-
-  return res.status(500).send(`
-    <h1>Erro interno</h1>
-    <pre>${err.stack}</pre>
-  `);
+  return res.status(500).render("errors/500", { title: "Erro interno" });
 });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
-
