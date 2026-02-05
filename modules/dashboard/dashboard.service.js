@@ -1,24 +1,54 @@
+// modules/dashboard/dashboard.service.js
 const db = require("../../database/db");
 
+function tableExists(name) {
+  const row = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name = ?`
+    )
+    .get(name);
+  return !!row;
+}
+
+function safeCount(sql, params = []) {
+  try {
+    return db.prepare(sql).get(...params)?.c ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 exports.getCounters = () => {
-  // Se algum módulo ainda não tiver tabela, é melhor falhar aqui do que no dashboard inteiro.
-  // MAS: assumindo que suas migrations já criaram tudo.
+  const hasOS = tableExists("os");
+  const hasSolic = tableExists("solicitacoes");
+  const hasCot = tableExists("cotacoes");
+  const hasEstoque = tableExists("estoque");
 
-  const osAbertas = db.prepare(`SELECT COUNT(*) as n FROM os WHERE status = 'ABERTA'`).get().n;
-  const osAndamento = db.prepare(`SELECT COUNT(*) as n FROM os WHERE status = 'ANDAMENTO'`).get().n;
-  const osConcluida = db.prepare(`SELECT COUNT(*) as n FROM os WHERE status = 'CONCLUIDA'`).get().n;
+  const counters = {
+    os_abertas: hasOS
+      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'ABERTA'`)
+      : 0,
+    os_andamento: hasOS
+      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'ANDAMENTO'`)
+      : 0,
+    os_concluidas: hasOS
+      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'CONCLUIDA'`)
+      : 0,
 
-  const comprasPendentes = db
-    .prepare(`SELECT COUNT(*) as n FROM compras WHERE status IN ('ABERTA','COTANDO','APROVADA')`)
-    .get().n;
+    solicitacoes_pendentes: hasSolic
+      ? safeCount(
+          `SELECT COUNT(*) as c FROM solicitacoes WHERE status IN ('ABERTA','PENDENTE','EM_COTACAO')`
+        )
+      : 0,
 
-  const itensEstoque = db.prepare(`SELECT COUNT(*) as n FROM estoque_itens`).get().n;
+    cotacoes_total: hasCot
+      ? safeCount(`SELECT COUNT(*) as c FROM cotacoes`)
+      : 0,
 
-  return {
-    osAbertas,
-    osAndamento,
-    osConcluida,
-    comprasPendentes,
-    itensEstoque,
+    itens_estoque: hasEstoque
+      ? safeCount(`SELECT COUNT(*) as c FROM estoque`)
+      : 0,
   };
+
+  return counters;
 };
