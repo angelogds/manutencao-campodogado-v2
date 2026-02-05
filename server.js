@@ -7,64 +7,37 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const engine = require("ejs-mate");
 
-const { requireLogin } = require("./modules/auth/auth.middleware");
-
-// Rotas
-const authRoutes = require("./modules/auth/auth.routes");
-const comprasRoutes = require("./modules/compras/compras.routes");
-const estoqueRoutes = require("./modules/estoque/estoque.routes");
-const osRoutes = require("./modules/os/os.routes");
-const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
-const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
-
 const app = express();
 
-/* =======================
-   CONFIG BÁSICA
-======================= */
-app.set("trust proxy", 1); // ✅ OBRIGATÓRIO no Railway
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-/* =======================
-   EJS + LAYOUT
-======================= */
+// ===== View engine =====
 app.engine("ejs", engine);
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-/* =======================
-   ARQUIVOS ESTÁTICOS
-======================= */
+// ===== Middlewares base =====
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-/* =======================
-   SESSÃO (RAILWAY SAFE)
-======================= */
+// ===== Session + Flash (antes das rotas) =====
 app.use(
   session({
-    name: "cg.sid",
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
-    proxy: true,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: "auto", // ✅ resolve HTTPS do Railway
-      maxAge: 1000 * 60 * 60 * 12, // 12h
+      secure: process.env.NODE_ENV === "production",
     },
   })
 );
 
 app.use(flash());
 
-/* =======================
-   VARIÁVEIS GLOBAIS (EJS)
-======================= */
+// ===== Globals =====
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
+  res.locals.user = req.session?.user || null;
   res.locals.flash = {
     success: req.flash("success"),
     error: req.flash("error"),
@@ -72,45 +45,44 @@ app.use((req, res, next) => {
   next();
 });
 
-/* =======================
-   ROTAS
-======================= */
-app.use(authRoutes);
-app.use(comprasRoutes);
-app.use(estoqueRoutes);
-app.use(osRoutes);
-app.use(usuariosRoutes);
+// ===== Rotas (IMPORTA DEPOIS DO app criado) =====
+const authRoutes = require("./modules/auth/auth.routes");
+const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
+const comprasRoutes = require("./modules/compras/compras.routes");
+const estoqueRoutes = require("./modules/estoque/estoque.routes");
+const osRoutes = require("./modules/os/os.routes");
+const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
-/* =======================
-   HOME
-======================= */
+// ===== Debug de rotas (para não rodar em círculos) =====
+function safeUse(name, mw) {
+  if (typeof mw !== "function") {
+    console.error(`❌ ROTA/MIDDLEWARE inválido: ${name}`, typeof mw, mw);
+    throw new Error(`Middleware inválido: ${name}`);
+  }
+  app.use(mw);
+}
+
+safeUse("authRoutes", authRoutes);
+safeUse("dashboardRoutes", dashboardRoutes);
+safeUse("comprasRoutes", comprasRoutes);
+safeUse("estoqueRoutes", estoqueRoutes);
+safeUse("osRoutes", osRoutes);
+safeUse("usuariosRoutes", usuariosRoutes);
+
+// ===== Home =====
 app.get("/", (req, res) => {
-  if (req.session.user) return res.redirect("/dashboard");
+  if (req.session?.user) return res.redirect("/dashboard");
   return res.redirect("/login");
 });
 
-/* =======================
-   DASHBOARD
-======================= */
-app.get("/dashboard", requireLogin, (req, res) => {
-  res.render("dashboard/index", { title: "Dashboard" });
+// ===== Health =====
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    app: "manutencao-campo-do-gado-v2",
+    timestamp: new Date().toISOString(),
+  });
 });
-
-/* =======================
-   DEBUG (TEMPORÁRIO)
-======================= */
-app.get("/debug/session", (req, res) => {
-  res.json({ session: req.session });
-});
-
-/* =======================
-   START
-======================= */
-
-app.use(dashboardRoutes);
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Servidor ativo na porta ${port}`);
-});
-
+app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
