@@ -1,40 +1,62 @@
+// database/migrate.js
 const fs = require("fs");
 const path = require("path");
-const db = require("./db"); // ✅ PRIMEIRO importa o db
+const db = require("./db");
 
-// ✅ cria a tabela de controle de migrations
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS migrations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename TEXT NOT NULL UNIQUE,
-    applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`).run();
-
-const migrationsDir = path.join(__dirname, "migrations");
-
-const applied = db
-  .prepare("SELECT filename FROM migrations")
-  .all()
-  .map((m) => m.filename);
-
-const files = fs
-  .readdirSync(migrationsDir)
-  .filter((f) => f.endsWith(".sql"))
-  .sort();
-
-for (const file of files) {
-  if (applied.includes(file)) continue;
-
-  const sql = fs.readFileSync(path.join(migrationsDir, file), "utf8");
-
-  db.exec(sql);
-
-  db.prepare("INSERT INTO migrations (filename) VALUES (?)").run(file);
-
-  console.log(`✔ Migration aplicada: ${file}`);
+function ensureMigrationsTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT NOT NULL UNIQUE,
+      applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
 }
 
-// ✅ roda seeds DEPOIS das migrations
-const { seedAdminIfMissing } = require("./seeds/usuarios.seed");
-seedAdminIfMissing();
+function getApplied() {
+  return new Set(
+    db.prepare("SELECT filename FROM migrations").all().map((r) => r.filename)
+  );
+}
+
+function applyMigrations() {
+  ensureMigrationsTable();
+
+  const migrationsDir = path.join(__dirname, "migrations");
+  if (!fs.existsSync(migrationsDir)) return;
+
+  const files = fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort(); // IMPORTANTÍSSIMO: ordem
+
+  const applied = getApplied();
+
+  const insert = db.prepare("INSERT INTO migrations (filename) VALUES (?)");
+
+  const tx = db.transaction(() => {
+    for (const file of files) {
+      if (applied.has(file)) continue;
+
+      const sql = fs.readFileSync(path.join(migrationsDir, file), "utf8");
+      db.exec(sql);
+      insert.run(file);
+      console.log(`✔ Migration aplicada: ${file}`);
+    }
+  });
+
+  tx();
+}
+
+function runSeeds() {
+  try {
+    require("./seeds/usuarios.seed"); // deve criar admin se faltar
+  } catch (e) {
+    console.log("⚠️ Seed não executada:", e.message);
+  }
+}
+
+applyMigrations();
+runSeeds();
+
+module.exports = { applyMigrations };
