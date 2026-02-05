@@ -5,9 +5,11 @@ const { requireLogin } = require("../auth/auth.middleware");
 const controller = require("./os.controller");
 
 // prefixo /os
-router.get("/os", requireLogin, controller.list);
-router.get("/os/new", requireLogin, controller.newForm);
-router.post("/os", requireLogin, controller.create);
-router.get("/os/:id", requireLogin, controller.view);
+router.use("/os", requireLogin);
+
+router.get("/os", controller.list);
+router.get("/os/new", controller.newForm);
+router.post("/os", controller.create);
+router.get("/os/:id", controller.view);
 
 module.exports = router;
