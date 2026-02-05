@@ -24,3 +24,8 @@ app.listen(port, () => {
   console.log(`Servidor ativo na porta ${port}`);
 });
 
+app.get("/", (req, res) => {
+  if (req.session?.user) return res.redirect("/dashboard");
+  return res.redirect("/login");
+});
+
