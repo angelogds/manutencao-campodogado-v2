@@ -7,11 +7,6 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const engine = require("ejs-mate");
 
-// (Opcional) Session store em SQLite — evita aviso do MemoryStore
-// const SQLiteStoreFactory = require("better-sqlite3-session-store");
-// const db = require("./database/db");
-// const SQLiteStore = SQLiteStoreFactory(session);
-
 const { requireLogin } = require("./modules/auth/auth.middleware");
 
 // Rotas
@@ -26,7 +21,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// EJS + Layout (ejs-mate)
+// EJS + layout()
 app.engine("ejs", engine);
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -34,26 +29,34 @@ app.set("view engine", "ejs");
 // estáticos
 app.use(express.static(path.join(__dirname, "public")));
 
-// sessão + flash (ANTES das rotas)
-app.use(
-  session({
-    // ✅ Se quiser usar SQLiteStore (recomendado no Railway), descomente o bloco do topo
-    // store: new SQLiteStore({
-    //   client: db,
-    //   expired: { clear: true, intervalMs: 24 * 60 * 60 * 1000 }
-    // }),
+// Sessão (tenta SQLiteStore; se falhar, usa MemoryStore sem quebrar deploy)
+let sessionOptions = {
+  secret: process.env.SESSION_SECRET || "dev-secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
+  }
+};
 
-    secret: process.env.SESSION_SECRET || "dev-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
-    }
-  })
-);
+try {
+  const SQLiteStoreFactory = require("better-sqlite3-session-store");
+  const db = require("./database/db");
+  const SQLiteStore = SQLiteStoreFactory(session);
 
+  sessionOptions.store = new SQLiteStore({
+    client: db,
+    expired: { clear: true, intervalMs: 24 * 60 * 60 * 1000 }
+  });
+
+  console.log("✅ Session store: SQLite (better-sqlite3-session-store)");
+} catch (e) {
+  console.log("⚠️ Session store: MemoryStore (fallback). Motivo:", e.message);
+}
+
+app.use(session(sessionOptions));
 app.use(flash());
 
 // vars globais p/ views
@@ -69,7 +72,7 @@ app.use((req, res, next) => {
 // auth primeiro
 app.use(authRoutes);
 
-// módulos do sistema
+// módulos
 app.use(comprasRoutes);
 app.use(estoqueRoutes);
 app.use(osRoutes);
@@ -81,7 +84,7 @@ app.get("/", (req, res) => {
   return res.redirect("/login");
 });
 
-// dashboard protegido
+// dashboard
 app.get("/dashboard", requireLogin, (req, res) => {
   return res.render("dashboard/index", { title: "Dashboard" });
 });
@@ -92,6 +95,20 @@ app.get("/health", (_req, res) => {
     status: "ok",
     app: "manutencao-campo-do-gado-v2",
     timestamp: new Date().toISOString()
+  });
+});
+
+// erro 404
+app.use((req, res) => {
+  return res.status(404).render("errors/404", { title: "Não encontrado" });
+});
+
+// erro 500 (mostra o erro real sem “rodar em círculo”)
+app.use((err, req, res, _next) => {
+  console.error("🔥 ERRO 500:", err);
+  return res.status(500).render("errors/500", {
+    title: "Erro interno",
+    error: err
   });
 });
 
