@@ -9,6 +9,17 @@ const flash = require("connect-flash");
 const { requireLogin } = require("./modules/auth/auth.middleware");
 const authRoutes = require("./modules/auth/auth.routes");
 
+const comprasRoutes = require("./modules/compras/compras.routes");
+const estoqueRoutes = require("./modules/estoque/estoque.routes");
+const osRoutes = require("./modules/os/os.routes");
+const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
+
+app.use(comprasRoutes);
+app.use(estoqueRoutes);
+app.use(osRoutes);
+app.use(usuariosRoutes);
+
+
 const app = express();
 
 app.use(express.json());
@@ -67,3 +78,4 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
