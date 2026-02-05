@@ -3,8 +3,12 @@ require("./database/migrate");
 
 const express = require("express");
 const path = require("path");
-const session = require("express-session"); // ✅ IMPORT
-const flash = require("connect-flash");     // ✅ IMPORT
+const session = require("express-session");
+const flash = require("connect-flash");
+
+// ✅ Store de sessão persistente (SQLite) - evita warning do MemoryStore no Railway
+const SQLiteStoreFactory = require("better-sqlite3-session-store");
+const SQLiteStore = SQLiteStoreFactory(session);
 
 const app = express();
 
@@ -17,9 +21,22 @@ app.set("view engine", "ejs");
 // ✅ Sessão e flash precisam vir ANTES das rotas
 app.use(
   session({
+    store: new SQLiteStore({
+      client: require("./database/db"), // usa seu db.js
+      expired: {
+        clear: true,
+        intervalMs: 15 * 60 * 1000, // limpa expiradas a cada 15 min
+      },
+    }),
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 12, // 12h
+    },
   })
 );
 
@@ -41,7 +58,7 @@ app.get("/", (req, res) => {
   return res.redirect("/login");
 });
 
-// ✅ Health check (se quiser testar no Railway)
+// ✅ Health check (Railway)
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
