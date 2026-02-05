@@ -1,3 +1,4 @@
+// server.js
 require("dotenv").config();
 require("./database/migrate");
 
@@ -9,6 +10,9 @@ const engine = require("ejs-mate");
 
 const app = express();
 
+// ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
+app.set("trust proxy", 1);
+
 // ===== View engine =====
 app.engine("ejs", engine);
 app.set("views", path.join(__dirname, "views"));
@@ -19,16 +23,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== Session + Flash (antes das rotas) =====
+// ===== Session + Flash (ANTES das rotas) =====
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
+    proxy: true, // ✅ ajuda com proxy reverso
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: "auto", // ✅ NÃO quebrar no Railway (HTTPS) e nem no local
     },
   })
 );
@@ -53,8 +58,9 @@ const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
 const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
-// ===== Debug de rotas (para não rodar em círculos) =====
+// ===== Guard de rotas (para não rodar em círculos) =====
 function safeUse(name, mw) {
+  // router do express é uma função
   if (typeof mw !== "function") {
     console.error(`❌ ROTA/MIDDLEWARE inválido: ${name}`, typeof mw, mw);
     throw new Error(`Middleware inválido: ${name}`);
@@ -62,6 +68,7 @@ function safeUse(name, mw) {
   app.use(mw);
 }
 
+// ✅ ordem: auth primeiro
 safeUse("authRoutes", authRoutes);
 safeUse("dashboardRoutes", dashboardRoutes);
 safeUse("comprasRoutes", comprasRoutes);
@@ -73,6 +80,17 @@ safeUse("usuariosRoutes", usuariosRoutes);
 app.get("/", (req, res) => {
   if (req.session?.user) return res.redirect("/dashboard");
   return res.redirect("/login");
+});
+
+// ===== Debug (remova depois) =====
+app.get("/debug-session", (req, res) => {
+  res.json({
+    hasSession: !!req.session,
+    user: req.session?.user || null,
+    cookieHeader: req.headers.cookie || null,
+    secure: req.secure,
+    xForwardedProto: req.headers["x-forwarded-proto"] || null,
+  });
 });
 
 // ===== Health =====
