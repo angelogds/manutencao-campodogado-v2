@@ -1,18 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= title || "Campo do Gado" %></title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title ? `${title} | Campo do Gado` : "Campo do Gado" %></title>
   <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
   <div class="app">
-    <%- include("partials/sidebar") %>
+    <%- include("./partials/sidebar") %>
 
-    <main class="content">
-      <%- include("partials/alerts") %>
-      <%- body %>
+    <main class="main">
+      <%- include("./partials/header") %>
+      <div class="container">
+        <%- include("./partials/alerts") %>
+        <%- body %>
+      </div>
+      <%- include("./partials/footer") %>
     </main>
   </div>
 </body>
