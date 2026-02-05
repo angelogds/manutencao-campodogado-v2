@@ -1,17 +1,10 @@
-const path = require('path');
-const fs = require('fs');
-const Database = require('better-sqlite3');
+const Database = require("better-sqlite3");
+const path = require("path");
 
-const DB_PATH =
+const dbPath =
   process.env.DB_PATH ||
-  path.join(__dirname, 'db.sqlite');
+  path.join(__dirname, "db.sqlite");
 
-const dir = path.dirname(DB_PATH);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
-
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+const db = new Database(dbPath);
 
 module.exports = db;
