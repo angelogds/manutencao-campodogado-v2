@@ -29,3 +29,20 @@ app.get("/", (req, res) => {
   return res.redirect("/login");
 });
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || "dev-secret",
+  resave: false,
+  saveUninitialized: false,
+}));
+
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  res.locals.flash = {
+    success: req.flash("success"),
+    error: req.flash("error"),
+  };
+  next();
+});
+
