@@ -90,5 +90,20 @@ app.get("/health", (_req, res) => {
   });
 });
 
+// ❗ Middleware de erro (DEV / Railway)
+app.use((err, req, res, next) => {
+  console.error("🔥 ERRO 500:", err);
+
+  if (process.env.NODE_ENV === "production") {
+    return res.status(500).send("Erro interno no servidor");
+  }
+
+  return res.status(500).send(`
+    <h1>Erro interno</h1>
+    <pre>${err.stack}</pre>
+  `);
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
