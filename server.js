@@ -15,6 +15,7 @@ const comprasRoutes = require("./modules/compras/compras.routes");
 const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
 const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
+const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
 
 const app = express();
 
@@ -105,7 +106,11 @@ app.get("/debug/session", (req, res) => {
 /* =======================
    START
 ======================= */
+
+app.use(dashboardRoutes);
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Servidor ativo na porta ${port}`);
 });
+
