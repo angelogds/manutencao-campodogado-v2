@@ -36,3 +36,6 @@ for (const file of files) {
 
   console.log(`✔ Migration aplicada: ${file}`);
 }
+
+const { seedAdminIfMissing } = require("./seeds/usuarios.seed");
+seedAdminIfMissing();
