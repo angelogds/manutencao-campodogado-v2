@@ -17,6 +17,9 @@ const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
 const app = express();
 
+// ✅ Railway/Proxy: necessário para cookie secure funcionar corretamente
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -35,7 +38,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production", // Railway em produção
+      secure: process.env.NODE_ENV === "production", // Railway
     },
   })
 );
