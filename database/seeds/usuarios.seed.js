@@ -1,17 +1,23 @@
 const bcrypt = require("bcryptjs");
 const db = require("../db");
 
-const email = "admin@campodogado.local";
-const senha = "admin123";
+function seedAdminIfMissing() {
+  const email = "admin@campodogado.local";
+  const exists = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
 
-const exists = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
-if (!exists) {
-  const hash = bcrypt.hashSync(senha, 10);
+  if (exists) {
+    console.log("✔ Seed: admin já existe");
+    return;
+  }
+
+  const hash = bcrypt.hashSync("admin123", 10);
+
   db.prepare(`
     INSERT INTO users (name, email, password_hash, role, created_at)
     VALUES (?, ?, ?, ?, datetime('now'))
-  `).run("Admin", email, hash, "ADMIN");
-  console.log("✅ Admin criado:", email);
-} else {
-  console.log("ℹ️ Admin já existe:", email);
+  `).run("Administrador", email, hash, "ADMIN");
+
+  console.log("✔ Seed: admin criado (admin@campodogado.local / admin123)");
 }
+
+module.exports = { seedAdminIfMissing };
