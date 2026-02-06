@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS estoque_mov (
   observacao TEXT,
 
   created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
 
   -- vínculo opcional com entidade dona
   owner_type TEXT,  -- 'os' | 'compra' | 'solicitacao' | 'manual'
