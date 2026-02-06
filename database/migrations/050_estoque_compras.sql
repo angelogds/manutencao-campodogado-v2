@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes (
   prioridade TEXT NOT NULL DEFAULT 'NORMAL', -- BAIXA | NORMAL | ALTA | URGENTE
   status TEXT NOT NULL DEFAULT 'ABERTA',     -- ABERTA | EM_COTACAO | APROVADA | REPROVADA | COMPRADA | RECEBIDA | CANCELADA
   created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
@@ -82,3 +82,4 @@ CREATE TABLE IF NOT EXISTS cotacao_itens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cot_itens_cot ON cotacao_itens(cotacao_id);
+
