@@ -1,23 +1,155 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= title ? `${title} | Campo do Gado` : "Campo do Gado" %></title>
-  <link rel="stylesheet" href="/css/app.css" />
-</head>
-<body>
-  <div class="app">
-    <%- include("./partials/sidebar") %>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= (title ? title + " • " : "") %>Campo do Gado • Manutenção</title>
 
-    <main class="main">
-      <%- include("./partials/header") %>
-      <div class="container">
-        <%- include("./partials/alerts") %>
+  <link rel="icon" href="/img/favicon.png" />
+  <link rel="stylesheet" href="/css/app.css" />
+
+  <style>
+    :root{
+      --green:#0b6b3a;
+      --green-2:#0a5c33;
+      --bg:#f6f7f8;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow: 0 10px 24px rgba(0,0,0,.06);
+      --radius: 16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    .app-shell{
+      display:grid;
+      grid-template-columns: 270px 1fr;
+      min-height:100vh;
+    }
+
+    .main{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .content{
+      padding: 14px 16px 24px;
+      min-width:0;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand-mini{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900; color:var(--green);
+    }
+    .brand-dot{
+      width:10px; height:10px; border-radius:999px; background:var(--green);
+      box-shadow: 0 0 0 6px rgba(11,107,58,.10);
+    }
+
+    .user-chip{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      font-weight:700;
+    }
+    .user-role{
+      font-size:12px;
+      padding:3px 10px;
+      border-radius:999px;
+      background:#ecfdf5;
+      border:1px solid #bbf7d0;
+      color:#065f46;
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+
+    /* buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid transparent;
+      text-decoration:none;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn-primary{ background:var(--green); color:#fff; }
+    .btn-primary:hover{ background:var(--green-2); }
+    .btn-outline{ background:#fff; border-color:var(--border); color:var(--green); }
+    .btn-outline:hover{ background:#f9fafb; }
+    .btn-danger{ background:#b91c1c; color:#fff; }
+    .btn-danger:hover{ filter:brightness(.95); }
+
+    /* responsive */
+    @media (max-width: 980px){
+      .app-shell{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <%- include('partials/sidebar') %>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="brand-mini">
+          <span class="brand-dot"></span>
+          <span>Manutenção • Campo do Gado</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+          <% if (user) { %>
+            <div class="user-chip">
+              <span><%= user.name || user.email %></span>
+              <span class="user-role"><%= user.role %></span>
+            </div>
+            <a class="btn btn-outline" href="/logout">Sair</a>
+          <% } else { %>
+            <a class="btn btn-primary" href="/login">Entrar</a>
+          <% } %>
+        </div>
+      </header>
+
+      <main class="content">
+        <%- include('partials/alerts') %>
         <%- body %>
-      </div>
-      <%- include("./partials/footer") %>
-    </main>
+      </main>
+
+      <footer>
+        <%- include('partials/footer') %>
+      </footer>
+    </div>
   </div>
+
+  <script src="/js/app.js"></script>
 </body>
 </html>
