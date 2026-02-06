@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS os (
   opened_by INTEGER,
   closed_by INTEGER,
 
-  opened_at TEXT NOT NULL DEFAULT (datetime('now')),
+  opened_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
   closed_at TEXT,
 
   FOREIGN KEY (opened_by) REFERENCES users(id),
@@ -33,3 +33,4 @@ CREATE TABLE IF NOT EXISTS anexos (
 CREATE INDEX IF NOT EXISTS idx_os_status ON os(status);
 CREATE INDEX IF NOT EXISTS idx_os_opened_at ON os(opened_at);
 CREATE INDEX IF NOT EXISTS idx_anexos_owner ON anexos(owner_type, owner_id);
+
