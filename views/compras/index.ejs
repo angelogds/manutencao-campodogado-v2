@@ -1,75 +1,82 @@
 <% layout('layout') %>
 
 <style>
-  .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-  .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
-  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
-  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; }
-  .table th,.table td{ padding:12px 12px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:14px; }
-  .table th{ font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; }
-  .badge{ padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid #e5e7eb; }
-  .b-aberta{ background:rgba(11,107,58,.08); border-color:rgba(11,107,58,.25); color:#0b6b3a; }
+  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; margin:10px 0 14px; flex-wrap:wrap;}
+  .sel, .btn{ height:40px; border-radius:12px; border:1px solid #e5e7eb; padding:0 12px; background:#fff; font-weight:800; }
+  .btn{ cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#111827;}
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff;}
+  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;}
+  .table th, .table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px;}
+  .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
+  .badge{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid #e5e7eb;}
+  .b-ABERTA{ background:rgba(11,107,58,.08); border-color:rgba(11,107,58,.25); color:#0b6b3a;}
+  .b-EM_COTACAO{ background:rgba(59,130,246,.10); border-color:rgba(59,130,246,.25); color:#1d4ed8;}
+  .b-APROVADA{ background:rgba(16,185,129,.10); border-color:rgba(16,185,129,.25); color:#047857;}
+  .b-COMPRADA{ background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.25); color:#92400e;}
+  .b-RECEBIDA{ background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.25); color:#166534;}
+  .b-CANCELADA{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:#991b1b;}
   .muted{ color:#6b7280; }
-  .filters{ display:flex; gap:8px; flex-wrap:wrap; }
-  .input{ padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; }
+  .link{ font-weight:900; color:#111827; text-decoration:none;}
+  .link:hover{ text-decoration:underline; }
 </style>
 
-<div class="row">
-  <div>
-    <h1 style="margin:0;">Compras</h1>
-    <p class="muted" style="margin:6px 0 0;">Solicitações da Manutenção para o setor de Compras.</p>
-  </div>
+<h1>Compras</h1>
+<p class="muted" style="margin-top:-6px;">
+  Solicitações da Manutenção para o setor de Compras.
+</p>
 
-  <div class="filters">
-    <form method="GET" action="/compras" style="display:flex; gap:8px; align-items:center;">
-      <select class="input" name="status">
-        <option value="" <%= !status ? "selected" : "" %>>Todos</option>
-        <option value="ABERTA" <%= status==="ABERTA" ? "selected" : "" %>>ABERTA</option>
-        <option value="EM_COTACAO" <%= status==="EM_COTACAO" ? "selected" : "" %>>EM_COTACAO</option>
-        <option value="APROVADA" <%= status==="APROVADA" ? "selected" : "" %>>APROVADA</option>
-        <option value="COMPRADA" <%= status==="COMPRADA" ? "selected" : "" %>>COMPRADA</option>
-        <option value="RECEBIDA" <%= status==="RECEBIDA" ? "selected" : "" %>>RECEBIDA</option>
-        <option value="CANCELADA" <%= status==="CANCELADA" ? "selected" : "" %>>CANCELADA</option>
-      </select>
-      <button class="btn" type="submit">Filtrar</button>
-    </form>
+<div class="toolbar">
+  <form method="GET" action="/compras" style="display:flex; gap:10px; align-items:center;">
+    <select class="sel" name="status">
+      <option value="TODOS" <%= status==="TODOS" ? "selected" : "" %>>Todos</option>
+      <option value="ABERTA" <%= status==="ABERTA" ? "selected" : "" %>>Abertas</option>
+      <option value="EM_COTACAO" <%= status==="EM_COTACAO" ? "selected" : "" %>>Em cotação</option>
+      <option value="APROVADA" <%= status==="APROVADA" ? "selected" : "" %>>Aprovadas</option>
+      <option value="COMPRADA" <%= status==="COMPRADA" ? "selected" : "" %>>Compradas</option>
+      <option value="RECEBIDA" <%= status==="RECEBIDA" ? "selected" : "" %>>Recebidas</option>
+      <option value="CANCELADA" <%= status==="CANCELADA" ? "selected" : "" %>>Canceladas</option>
+    </select>
+    <button class="btn" type="submit">Filtrar</button>
+  </form>
 
-    <a class="btn primary" href="/compras/new">+ Nova Solicitação</a>
-  </div>
+  <a class="btn primary" href="/compras/new">+ Nova Solicitação</a>
 </div>
 
-<div style="margin-top:14px;">
-  <table class="table">
-    <thead>
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width:90px;">ID</th>
+      <th>TÍTULO</th>
+      <th style="width:200px;">SETOR</th>
+      <th style="width:160px;">PRIORIDADE</th>
+      <th style="width:160px;">STATUS</th>
+      <th style="width:170px;">DATA</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% if (!itens || itens.length === 0) { %>
       <tr>
-        <th style="width:80px;">ID</th>
-        <th>Título</th>
-        <th>Setor</th>
-        <th>Prioridade</th>
-        <th>Status</th>
-        <th style="width:160px;">Data</th>
+        <td colspan="6" class="muted">Nenhuma solicitação encontrada.</td>
       </tr>
-    </thead>
-
-    <tbody>
-      <% if (!items || items.length === 0) { %>
+    <% } else { %>
+      <% itens.forEach((s) => { %>
         <tr>
-          <td colspan="6" class="muted">Nenhuma solicitação encontrada.</td>
+          <td>#<%= s.id %></td>
+          <td>
+            <a class="link" href="/compras/<%= s.id %>"><%= s.titulo %></a>
+            <div class="muted" style="font-size:12px; margin-top:4px;">
+              <%= s.criado_por ? ("por " + s.criado_por) : "" %>
+            </div>
+          </td>
+          <td><%= s.setor %></td>
+          <td><%= s.prioridade %></td>
+          <td>
+            <span class="badge b-<%= s.status %>"><%= s.status %></span>
+          </td>
+          <td class="muted"><%= (s.created_at || "").replace("T"," ").slice(0,16) %></td>
         </tr>
-      <% } else { %>
-        <% items.forEach((s) => { %>
-          <tr>
-            <td>#<%= s.id %></td>
-            <td style="font-weight:900;"><%= s.titulo %></td>
-            <td><%= s.setor %></td>
-            <td><%= s.prioridade %></td>
-            <td>
-              <span class="badge <%= s.status === 'ABERTA' ? 'b-aberta' : '' %>"><%= s.status %></span>
-            </td>
-            <td class="muted"><%= (s.created_at || '').replace('T',' ').slice(0,16) %></td>
-          </tr>
-        <% }) %>
-      <% } %>
-    </tbody>
-  </table>
-</div>
+      <% }) %>
+    <% } %>
+  </tbody>
+</table>
