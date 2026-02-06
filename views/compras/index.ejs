@@ -26,9 +26,7 @@
   tr.rowlink:hover td{ background:#f9fafb; }
 </style>
 
-<%
-  function fmtDate(v){
-    if(!v) return "";
+
     // SQLite: "2026-02-06 16:42:10" ou ISO: "2026-02-06T16:42:10.000Z"
     const s = String(v).replace("T"," ").replace(".000Z","");
     return s.length >= 16 ? s.slice(0,16) : s;
@@ -96,7 +94,7 @@
             <span class="badge b-<%= s.status %>"><%= s.status %></span>
           </td>
 
-          <td class="muted"><%= fmtDate(s.created_at) %></td>
+         <td class="muted"><%= fmtBR(s.created_at) %></td>
 
           <td>
             <a class="btn small ghost" href="/compras/<%= s.id %>" onclick="event.stopPropagation()">
