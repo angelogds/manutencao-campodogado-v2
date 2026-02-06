@@ -10,7 +10,7 @@ const engine = require("ejs-mate");
 
 const app = express();
 
-// ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
+// ✅ Railway/Proxy (resolve sessão em HTTPS atrás do proxy)
 app.set("trust proxy", 1);
 
 // ===== View engine =====
@@ -23,22 +23,43 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// ===== Helpers de ambiente/HTTPS =====
+const isProd = process.env.NODE_ENV === "production";
+const isHttps = (req) => {
+  // Railway normalmente envia x-forwarded-proto=https
+  const xfProto = (req.headers["x-forwarded-proto"] || "").toString().toLowerCase();
+  return req.secure || xfProto === "https";
+};
+
 // ===== Session + Flash (ANTES das rotas) =====
 app.use(
   session({
+    name: process.env.SESSION_NAME || "cgd.sid",
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
-    proxy: true, // ✅ ajuda com proxy reverso
+    proxy: true, // ✅ importante com proxy reverso
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: "auto", // ✅ NÃO quebrar no Railway (HTTPS) e nem no local
+      secure: isProd, // ✅ em produção (Railway): true
+      // se quiser evitar cookie eterno:
+      // maxAge: 1000 * 60 * 60 * 8, // 8h
     },
   })
 );
 
 app.use(flash());
+
+// ✅ Ajuste fino: se estiver em produção mas a requisição NÃO veio em HTTPS,
+// força secure=false pra não “matar” cookie em testes/ambientes mistos.
+app.use((req, _res, next) => {
+  if (isProd && !isHttps(req)) {
+    // se por algum motivo o proxy não marcou https, evita quebrar login
+    req.session.cookie.secure = false;
+  }
+  next();
+});
 
 // ===== Globals =====
 app.use((req, res, next) => {
@@ -58,7 +79,7 @@ const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
 const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
-// ===== Guard de rotas (para não rodar em círculos) =====
+// ===== Guard de rotas (pra não rodar em círculos) =====
 function safeUse(name, mw) {
   // router do express é uma função
   if (typeof mw !== "function") {
@@ -85,11 +106,13 @@ app.get("/", (req, res) => {
 // ===== Debug (remova depois) =====
 app.get("/debug-session", (req, res) => {
   res.json({
+    env: process.env.NODE_ENV || null,
     hasSession: !!req.session,
     user: req.session?.user || null,
     cookieHeader: req.headers.cookie || null,
-    secure: req.secure,
+    reqSecure: req.secure,
     xForwardedProto: req.headers["x-forwarded-proto"] || null,
+    sessionCookie: req.session?.cookie || null,
   });
 });
 
