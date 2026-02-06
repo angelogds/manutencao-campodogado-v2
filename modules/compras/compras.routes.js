@@ -1,12 +1,25 @@
 const express = require("express");
 const router = express.Router();
+
 const { requireLogin, requireRole } = require("../auth/auth.middleware");
-const controller = require("./compras.controller");
+const controller = require("./compras.controller"); // ✅ OBRIGATÓRIO
 
-router.get("/compras", requireLogin, requireRole(["ADMIN","COMPRAS"]), controller.list);
-router.post("/compras", requireLogin, requireRole(["ADMIN","COMPRAS"]), controller.create);
+// Lista de compras
+router.get("/compras", requireLogin, controller.index);
 
-// receber compra -> joga no estoque
-router.post("/compras/:id/receber", requireLogin, requireRole(["ADMIN","COMPRAS"]), controller.receive);
+// Nova solicitação
+router.get(
+  "/compras/new",
+  requireLogin,
+  requireRole(["ADMIN", "COMPRAS"]),
+  controller.newForm
+);
+
+router.post(
+  "/compras",
+  requireLogin,
+  requireRole(["ADMIN", "COMPRAS"]),
+  controller.create
+);
 
 module.exports = router;
