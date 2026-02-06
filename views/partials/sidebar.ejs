@@ -1,139 +1,28 @@
-<style>
-  .sidebar{
-    background:#0b6b3a;
-    color:#fff;
-    padding:16px 14px;
-    border-right: 1px solid rgba(255,255,255,.14);
-    min-height:100vh;
-  }
-  .side-brand{
-    display:flex; align-items:center; gap:10px;
-    padding:10px 10px;
-    border-radius:14px;
-    background: rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.18);
-    margin-bottom:12px;
-  }
-  .side-logo{
-    width:36px; height:36px; border-radius:12px;
-    background: rgba(255,255,255,.18);
-    display:flex; align-items:center; justify-content:center;
-    font-weight:900;
-  }
-  .side-title{ font-weight:900; line-height:1.05; }
-  .side-sub{ font-size:12px; opacity:.85; }
-
-  .nav{
-    margin-top:10px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .nav a{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:10px;
-    text-decoration:none;
-    color:#fff;
-    padding:10px 10px;
-    border-radius:14px;
-    border:1px solid transparent;
-    background: rgba(255,255,255,.08);
-    font-weight:800;
-  }
-  .nav a:hover{
-    background: rgba(255,255,255,.14);
-    border-color: rgba(255,255,255,.18);
-  }
-  .nav small{
-    opacity:.9;
-    font-weight:700;
-    background: rgba(0,0,0,.20);
-    padding:2px 8px;
-    border-radius:999px;
-  }
-
-  .nav-section{
-    margin-top:12px;
-    font-size:12px;
-    letter-spacing:.08em;
-    opacity:.85;
-    padding: 10px 10px 6px;
-    text-transform: uppercase;
-  }
-
-  .side-foot{
-    margin-top:14px;
-    padding:10px;
-    border-radius:14px;
-    background: rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.18);
-    font-size:12px;
-    opacity:.92;
-  }
-</style>
-
-<%
-  const role = user?.role || "GUEST";
-  const is = (r) => role === r;
-  const any = (arr) => arr.includes(role);
-
-  const canAdmin = is("ADMIN");
-  const canDirecao = any(["DIRECAO","ADMIN"]);
-  const canRH = any(["RH","ADMIN"]);
-  const canCompras = any(["COMPRAS","ADMIN"]);
-  const canManut = any(["MANUTENCAO","ADMIN"]);
-%>
-
-<div class="side-brand">
-  <div class="side-logo">CG</div>
-  <div>
-    <div class="side-title">Campo do Gado</div>
-    <div class="side-sub">Sistema de Manutenção V2</div>
+<aside style="
+  width:260px; background:linear-gradient(180deg, #0b6b3a, #07502c);
+  color:#fff; padding:16px; border-right:1px solid rgba(255,255,255,.08);
+  position:relative;
+">
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+    <div style="width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-weight:900;">
+      CG
+    </div>
+    <div style="font-weight:900;">Campo do Gado</div>
   </div>
-</div>
 
-<div class="nav">
-  <a href="/dashboard"><span>Dashboard</span><small>Home</small></a>
+  <nav style="display:flex; flex-direction:column; gap:10px;">
+    <a href="/dashboard" style="color:#fff; text-decoration:none; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.10); font-weight:800;">Dashboard</a>
+    <a href="/os" style="color:#fff; text-decoration:none; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); font-weight:800;">Ordens de Serviço</a>
+    <a href="/compras" style="color:#fff; text-decoration:none; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); font-weight:800;">Compras (Inbox)</a>
+    <a href="/estoque" style="color:#fff; text-decoration:none; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); font-weight:800;">Estoque</a>
 
-  <% if (user) { %>
-    <div class="nav-section">Manutenção</div>
-    <a href="/os"><span>Ordens de Serviço</span><small>OS</small></a>
-    <a href="/os/new"><span>Abrir OS</span><small>+</small></a>
-
-    <div class="nav-section">Solicitações</div>
-    <a href="/solicitacoes"><span>Solicitações</span><small>Lista</small></a>
-    <a href="/solicitacoes/new"><span>Nova Solicitação</span><small>+</small></a>
-
-    <% if (canCompras) { %>
-      <div class="nav-section">Compras</div>
-      <a href="/compras"><span>Inbox Compras</span><small>IN</small></a>
-      <a href="/compras/estoque"><span>Entrada Estoque</span><small>+</small></a>
+    <% if ((user?.role || user?.perfil) === "ADMIN") { %>
+      <div style="margin-top:10px; opacity:.9; font-weight:900; font-size:12px;">ADMIN</div>
+      <a href="/admin/users" style="color:#fff; text-decoration:none; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); font-weight:800;">Usuários</a>
     <% } %>
+  </nav>
 
-    <div class="nav-section">Estoque</div>
-    <a href="/estoque"><span>Itens e Saldo</span><small>Σ</small></a>
-
-    <% if (canDirecao) { %>
-      <div class="nav-section">Direção</div>
-      <a href="/dashboard"><span>Indicadores</span><small>ROI</small></a>
-    <% } %>
-
-    <% if (canRH) { %>
-      <div class="nav-section">RH</div>
-      <a href="/nao-conformidades"><span>NC / NR12</span><small>NR</small></a>
-    <% } %>
-
-    <% if (canAdmin) { %>
-      <div class="nav-section">Admin</div>
-      <a href="/admin/users"><span>Usuários</span><small>RBAC</small></a>
-    <% } %>
-
-  <% } else { %>
-    <a href="/login"><span>Entrar</span><small>Login</small></a>
-  <% } %>
-</div>
-
-<div class="side-foot">
-  <div><strong>Perfil:</strong> <%= role %></div>
-  <div style="margin-top:6px;">Versão: <strong>V2</strong></div>
-</div>
+  <div style="position:absolute; left:16px; bottom:16px; opacity:.9; font-size:12px;">
+    © 2026 Campo do Gado
+  </div>
+</aside>
