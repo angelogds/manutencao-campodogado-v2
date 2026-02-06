@@ -1,4 +1,8 @@
+// modules/os/os.controller.js
 const service = require("./os.service");
+
+// ✅ pega equipamentos para o select da OS
+const equipamentosService = require("../equipamentos/equipamentos.service");
 
 exports.list = (req, res) => {
   const status = req.query.status || "ABERTA";
@@ -12,22 +16,37 @@ exports.list = (req, res) => {
 };
 
 exports.newForm = (req, res) => {
-  return res.render("os/new", { title: "Abrir OS" });
+  const equipamentos = equipamentosService.listAtivos();
+
+  return res.render("os/new", {
+    title: "Abrir OS",
+    equipamentos,
+  });
 };
 
 exports.create = (req, res) => {
-  const { equipamento, descricao, tipo } = req.body;
+  // ✅ novo padrão: equipamento_id vindo do <select>
+  // ✅ compat: se ainda vier "equipamento" texto (de um form antigo), não explode
+  const { equipamento_id, equipamento, descricao, tipo } = req.body;
 
-  if (!equipamento || !descricao) {
-    req.flash("error", "Preencha equipamento e descrição.");
+  const equipIdNum = equipamento_id ? Number(equipamento_id) : null;
+
+  if ((!equipIdNum && !equipamento) || !descricao) {
+    req.flash("error", "Selecione o equipamento e preencha a descrição.");
     return res.redirect("/os/new");
   }
 
   try {
     const id = service.createOS({
-      equipamento,
+      // ✅ preferir equipamento_id
+      equipamento_id: equipIdNum || null,
+
+      // ✅ opcional (compatibilidade): se seu service ainda salvar texto
+      // se você NÃO usa mais texto, pode remover essa linha no service depois
+      equipamento: equipamento || null,
+
       descricao,
-      tipo: tipo || "CORRETIVA",
+      tipo: (tipo || "CORRETIVA").toUpperCase(),
       opened_by: req.session.user.id,
     });
 
@@ -56,12 +75,14 @@ exports.updateStatus = (req, res) => {
   const { status } = req.body;
 
   const allowed = ["ABERTA", "ANDAMENTO", "PAUSADA", "CONCLUIDA", "CANCELADA"];
-  if (!allowed.includes(status)) {
+  const st = String(status || "").toUpperCase();
+
+  if (!allowed.includes(st)) {
     req.flash("error", "Status inválido.");
     return res.redirect(`/os/${id}`);
   }
 
-  service.updateStatus({ id, status, userId: req.session.user.id });
+  service.updateStatus({ id, status: st, userId: req.session.user.id });
   req.flash("success", "Status atualizado.");
   return res.redirect(`/os/${id}`);
 };
