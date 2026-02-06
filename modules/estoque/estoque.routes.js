@@ -1,41 +1,9 @@
-const db = require("../../database/db");
+const express = require("express");
+const router = express.Router();
 
-function tableExists(name) {
-  const row = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
-    .get(name);
-  return !!row;
-}
+const { requireLogin } = require("../auth/auth.middleware");
+const controller = require("./estoque.controller"); // ✅ FALTAVA ISSO
 
-exports.listItens = () => {
-  if (!tableExists("estoque")) return [];
+router.get("/estoque", requireLogin, controller.index);
 
-  // ✅ tua tabela estoque tem "descricao", não "nome"
-  return db
-    .prepare(
-      `
-      SELECT
-        id, descricao, unidade, quantidade, valor_unitario, atualizado_em
-      FROM estoque
-      ORDER BY descricao COLLATE NOCASE ASC
-    `
-    )
-    .all();
-};
-
-exports.listMovsRecentes = (limit = 20) => {
-  // ✅ só lista se a tabela existir (pra não quebrar)
-  if (!tableExists("estoque_mov")) return [];
-
-  return db
-    .prepare(
-      `
-      SELECT
-        id, item_id, tipo, quantidade, origem, created_by, created_at
-      FROM estoque_mov
-      ORDER BY id DESC
-      LIMIT ?
-    `
-    )
-    .all(limit);
-};
+module.exports = router;
