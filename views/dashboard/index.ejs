@@ -1,170 +1,60 @@
 <% layout('layout') %>
 
-<section class="page">
-  <div class="page-header">
-    <div>
-      <h1>Dashboard</h1>
-      <p class="muted">Visão geral do sistema (OS • Compras • Estoque)</p>
-    </div>
-    <div class="page-actions">
-      <a class="btn btn-outline" href="/os">Ver OS</a>
-      <a class="btn btn-primary" href="/os/new">Abrir OS</a>
-    </div>
-  </div>
-
-  <div class="grid grid-4">
-    <div class="card kpi">
-      <div class="kpi-top">
-        <span class="badge badge-green">OS</span>
-        <span class="muted">Abertas</span>
-      </div>
-      <div class="kpi-value"><%= (counters?.os_abertas ?? 0) %></div>
-      <div class="kpi-foot">
-        <a class="link" href="/os?status=ABERTA">ver lista →</a>
-      </div>
-    </div>
-
-    <div class="card kpi">
-      <div class="kpi-top">
-        <span class="badge badge-blue">OS</span>
-        <span class="muted">Em andamento</span>
-      </div>
-      <div class="kpi-value"><%= (counters?.os_andamento ?? 0) %></div>
-      <div class="kpi-foot">
-        <a class="link" href="/os?status=ANDAMENTO">ver lista →</a>
-      </div>
-    </div>
-
-    <div class="card kpi">
-      <div class="kpi-top">
-        <span class="badge badge-gray">OS</span>
-        <span class="muted">Concluídas</span>
-      </div>
-      <div class="kpi-value"><%= (counters?.os_concluidas ?? 0) %></div>
-      <div class="kpi-foot">
-        <a class="link" href="/os?status=CONCLUIDA">ver lista →</a>
-      </div>
-    </div>
-
-    <div class="card kpi">
-      <div class="kpi-top">
-        <span class="badge badge-amber">Compras</span>
-        <span class="muted">Pendentes</span>
-      </div>
-      <div class="kpi-value"><%= (counters?.solicitacoes_pendentes ?? 0) %></div>
-      <div class="kpi-foot">
-        <a class="link" href="/solicitacoes">abrir solicitações →</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid grid-2 mt">
-    <div class="card">
-      <div class="card-head">
-        <h2>Atalhos rápidos</h2>
-        <span class="muted">Ações comuns</span>
-      </div>
-
-      <div class="actions">
-        <a class="btn btn-outline" href="/solicitacoes/new">Nova Solicitação</a>
-        <a class="btn btn-outline" href="/compras">Compras (Inbox)</a>
-        <a class="btn btn-outline" href="/estoque">Estoque</a>
-        <a class="btn btn-outline" href="/admin/users">Usuários</a>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="small muted">
-        * Alguns atalhos podem depender do seu perfil (ADMIN, COMPRAS, MANUTENÇÃO, RH, DIREÇÃO).
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <h2>Indicadores</h2>
-        <span class="muted">Resumo do banco</span>
-      </div>
-
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-label">Total de cotações</div>
-          <div class="stat-value"><%= (counters?.cotacoes_total ?? 0) %></div>
-          <div class="stat-foot muted">Registro em <strong>cotacoes</strong></div>
-        </div>
-
-        <div class="stat">
-          <div class="stat-label">Itens cadastrados no estoque</div>
-          <div class="stat-value"><%= (counters?.itens_estoque ?? 0) %></div>
-          <div class="stat-foot muted">Registro em <strong>estoque</strong></div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="status-row">
-        <span class="muted">Status do sistema:</span>
-        <span class="pill pill-ok">ONLINE</span>
-        <a class="link" href="/health" target="_blank">health →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
 <style>
-  /* ===== Dashboard page minimal style (verde/branco) ===== */
-  .page { padding: 18px; }
-  .page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; }
-  h1 { margin:0; font-size:24px; }
-  h2 { margin:0; font-size:16px; }
-  .muted { color:#6b7280; }
-  .mt { margin-top:14px; }
-
-  .grid { display:grid; gap:12px; }
-  .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (max-width: 1100px){ .grid-4{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 700px){ .grid-4,.grid-2{ grid-template-columns: 1fr; } .page-header{ flex-direction:column; align-items:flex-start; } }
-
-  .card {
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:14px;
-    padding:14px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.04);
-  }
-
-  .kpi { display:flex; flex-direction:column; gap:10px; }
-  .kpi-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .kpi-value { font-size:34px; font-weight:800; letter-spacing:-.02em; color:#0f172a; }
-  .kpi-foot { display:flex; justify-content:flex-end; }
-
-  .badge { font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#f9fafb; }
-  .badge-green { background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
-  .badge-blue { background:#eff6ff; border-color:#bfdbfe; color:#1e40af; }
-  .badge-amber { background:#fffbeb; border-color:#fde68a; color:#92400e; }
-  .badge-gray { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
-
-  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:9px 12px; border-radius:12px; border:1px solid transparent; text-decoration:none; font-weight:700; font-size:14px; }
-  .btn-primary { background:#0b6b3a; color:#fff; }
-  .btn-primary:hover { filter:brightness(.95); }
-  .btn-outline { background:#fff; border-color:#e5e7eb; color:#0b6b3a; }
-  .btn-outline:hover { background:#f9fafb; }
-
-  .link { color:#0b6b3a; font-weight:700; text-decoration:none; }
-  .link:hover { text-decoration:underline; }
-
-  .card-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:12px; }
-  .actions { display:flex; flex-wrap:wrap; gap:10px; }
-  .divider { height:1px; background:#e5e7eb; margin:12px 0; }
-
-  .stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  @media (max-width: 900px){ .stats{ grid-template-columns:1fr; } }
-  .stat { padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#f9fafb; }
-  .stat-label { font-size:13px; color:#6b7280; }
-  .stat-value { font-size:24px; font-weight:800; color:#0f172a; margin-top:4px; }
-  .stat-foot { font-size:12px; margin-top:4px; }
-
-  .status-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .pill { padding:4px 10px; border-radius:999px; font-weight:800; font-size:12px; border:1px solid transparent; }
-  .pill-ok { background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
+  .grid{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px; }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
+  .k{ color:#6b7280; font-weight:800; font-size:13px; }
+  .v{ font-size:34px; font-weight:900; margin-top:6px; }
+  .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
+  @media(max-width: 900px){ .grid{ grid-template-columns:1fr; } }
 </style>
+
+<h1>Dashboard</h1>
+<p style="color:#6b7280; margin-top:-6px;">
+  Bem-vindo, <strong><%= user?.nome || "Usuário" %></strong>. Perfil: <strong><%= user?.role || user?.perfil || "USER" %></strong>
+</p>
+
+<div class="grid">
+  <div class="card">
+    <div class="k">OS Abertas</div>
+    <div class="v"><%= counters.os_abertas %></div>
+    <a class="btn" href="/os?status=ABERTA">Ver OS</a>
+    <a class="btn primary" href="/os/new" style="margin-left:8px;">Abrir OS</a>
+  </div>
+
+  <div class="card">
+    <div class="k">OS em Andamento</div>
+    <div class="v"><%= counters.os_andamento %></div>
+    <a class="btn" href="/os?status=ANDAMENTO">Acompanhar</a>
+  </div>
+
+  <div class="card">
+    <div class="k">OS Concluídas</div>
+    <div class="v"><%= counters.os_concluidas %></div>
+    <a class="btn" href="/os?status=CONCLUIDA">Histórico</a>
+  </div>
+
+  <div class="card">
+    <div class="k">Compras Pendentes</div>
+    <div class="v"><%= counters.compras_pendentes %></div>
+    <a class="btn" href="/compras">Ir para Compras</a>
+  </div>
+
+  <div class="card">
+    <div class="k">Itens no Estoque</div>
+    <div class="v"><%= counters.estoque_itens %></div>
+    <a class="btn" href="/estoque">Ver Estoque</a>
+  </div>
+
+  <div class="card">
+    <div class="k">Admin</div>
+    <div style="margin-top:10px;">
+      <% if ((user?.role || user?.perfil) === "ADMIN") { %>
+        <a class="btn" href="/admin/users">Usuários</a>
+      <% } else { %>
+        <span style="color:#6b7280;">Sem acesso</span>
+      <% } %>
+    </div>
+  </div>
+</div>
