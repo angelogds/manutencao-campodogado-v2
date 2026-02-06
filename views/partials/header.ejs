@@ -1,23 +1,17 @@
-<header class="topbar">
-  <div class="topbar-left">
-    <div class="brand">
-      <div class="brand-dot"></div>
-      <div>
-        <div class="brand-title">Manutenção Campo do Gado</div>
-        <div class="brand-subtitle">V2 • Gestão Industrial</div>
-      </div>
-    </div>
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+  <div>
+    <h1 style="margin:0; font-size:20px;"><%= title || "Sistema" %></h1>
+    <p style="margin:3px 0 0; color:#6b7280; font-size:13px;">
+      Campo do Gado • Manutenção Industrial
+    </p>
   </div>
 
-  <div class="topbar-right">
-    <% if (user) { %>
-      <div class="user-pill">
-        <span class="user-name"><%= user.name %></span>
-        <span class="user-role"><%= user.role %></span>
-      </div>
-      <a class="btn btn-outline" href="/logout">Sair</a>
-    <% } else { %>
-      <a class="btn btn-outline" href="/login">Entrar</a>
-    <% } %>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <a class="btn btn-outline" href="/dashboard">Dashboard</a>
+    <a class="btn btn-outline" href="/os">OS</a>
+    <a class="btn btn-outline" href="/estoque">Estoque</a>
+    <a class="btn btn-outline" href="/compras">Compras</a>
   </div>
-</header>
+</div>
+
+<div style="height:1px; background:#e5e7eb; margin:12px 0;"></div>
