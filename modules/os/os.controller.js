@@ -51,16 +51,17 @@ exports.view = (req, res) => {
   return res.render("os/view", { title: `OS #${os.id}`, os });
 };
 
-exports.changeStatus = (req, res) => {
+exports.updateStatus = (req, res) => {
   const id = Number(req.params.id);
   const { status } = req.body;
 
-  try {
-    service.updateStatus({ id, status, closed_by: req.session.user.id });
-    req.flash("success", "Status atualizado.");
-    return res.redirect(`/os/${id}`);
-  } catch (e) {
-    req.flash("error", e.message || "Erro ao atualizar status.");
+  const allowed = ["ABERTA", "ANDAMENTO", "PAUSADA", "CONCLUIDA", "CANCELADA"];
+  if (!allowed.includes(status)) {
+    req.flash("error", "Status inválido.");
     return res.redirect(`/os/${id}`);
   }
+
+  service.updateStatus({ id, status, userId: req.session.user.id });
+  req.flash("success", "Status atualizado.");
+  return res.redirect(`/os/${id}`);
 };
