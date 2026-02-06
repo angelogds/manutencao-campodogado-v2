@@ -1,16 +1,17 @@
 const TZ = process.env.APP_TZ || "America/Sao_Paulo";
 
+// Formata datas do SQLite/ISO para pt-BR no fuso do Brasil
 function fmtBR(dateLike, opts = {}) {
   if (!dateLike) return "";
 
-  // aceita "YYYY-MM-DD HH:mm:ss" do sqlite
-  let d = dateLike instanceof Date ? dateLike : new Date(String(dateLike).replace(" ", "T") + "Z");
+  // SQLite costuma vir "YYYY-MM-DD HH:mm:ss"
+  const s = String(dateLike);
 
-  // se já vier Date válido, ok
-  if (isNaN(d.getTime())) {
-    // fallback (tenta sem Z)
-    d = new Date(String(dateLike).replace(" ", "T"));
-  }
+  // tenta como UTC (recomendado: banco salvar UTC)
+  let d = dateLike instanceof Date ? dateLike : new Date(s.replace(" ", "T") + "Z");
+
+  // fallback
+  if (isNaN(d.getTime())) d = new Date(s.replace(" ", "T"));
 
   const format = new Intl.DateTimeFormat("pt-BR", {
     timeZone: TZ,
