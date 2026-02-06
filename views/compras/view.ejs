@@ -1,1 +1,69 @@
 
+<% layout('layout') %>
+
+<style>
+  .wrap{ max-width: 980px; margin: 0 auto; }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .pill{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:900; font-size:12px; border:1px solid #e5e7eb; }
+  .pill.aberta{ background: rgba(11,107,58,.08); border-color: rgba(11,107,58,.25); color:#0b6b3a; }
+  .pill.outro{ background:#f3f4f6; color:#111827; }
+  .k{ color:#6b7280; font-weight:900; font-size:12px; letter-spacing:.02em; }
+  .v{ font-weight:800; }
+  .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
+</style>
+
+<div class="wrap">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+      <h1 style="margin:0;">Solicitação #<%= solicitacao.id %></h1>
+      <p style="margin:6px 0 0; color:#6b7280;">
+        <strong><%= solicitacao.titulo %></strong>
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <% const st = (solicitacao.status || "").toUpperCase(); %>
+      <% if (st === "ABERTA") { %>
+        <span class="pill aberta">ABERTA</span>
+      <% } else { %>
+        <span class="pill outro"><%= st || "STATUS" %></span>
+      <% } %>
+
+      <a class="btn" href="/compras">Voltar</a>
+      <a class="btn primary" href="/compras/new">+ Nova</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="row">
+      <div style="min-width:220px;">
+        <div class="k">SETOR</div>
+        <div class="v"><%= solicitacao.setor %></div>
+      </div>
+      <div style="min-width:220px;">
+        <div class="k">PRIORIDADE</div>
+        <div class="v"><%= solicitacao.prioridade %></div>
+      </div>
+      <div style="min-width:260px;">
+        <div class="k">DATA</div>
+        <div class="v"><%= solicitacao.created_at %></div>
+      </div>
+    </div>
+
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
+
+    <div class="k">DESCRIÇÃO</div>
+    <div style="margin-top:8px; line-height:1.45;">
+      <%= solicitacao.descricao %>
+    </div>
+
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
+
+    <div style="color:#6b7280; font-size:13px;">
+      Itens e quantidades: <strong>vamos adicionar na próxima etapa</strong>.
+    </div>
+  </div>
+</div>
+
