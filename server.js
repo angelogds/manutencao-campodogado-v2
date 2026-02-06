@@ -12,6 +12,14 @@ const engine = require("ejs-mate");
 const { fmtBR, TZ } = require("./utils/date");
 
 const app = express();
+// ✅ Seed (não quebra se não existir)
+try {
+  const { ensureAdmin } = require("./database/seed"); // precisa existir em /database/seed.js
+  ensureAdmin();
+} catch (err) {
+  console.log("⚠️ Seed não carregado (./database/seed). Motivo:", err.message);
+  console.log("👉 Crie o arquivo: database/seed.js para ativar o seed do admin.");
+}
 
 // ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
 app.set("trust proxy", 1);
@@ -132,3 +140,4 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
