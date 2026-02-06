@@ -3,9 +3,14 @@ const service = require("./compras.service");
 exports.index = (req, res) => {
   const itens = service.list();
 
+  exports.index = (req, res) => {
+  const status = req.query.status || null;
+  const itens = service.list({ status });
+
   return res.render("compras/index", {
     title: "Compras",
     itens,
+    status,
   });
 };
 
@@ -37,3 +42,4 @@ exports.create = (req, res) => {
     return res.redirect("/compras/new");
   }
 };
+
