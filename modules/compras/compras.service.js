@@ -7,19 +7,28 @@ function tableExists(name) {
   return !!row;
 }
 
-exports.listSafe = () => {
-  if (!tableExists("solicitacoes_compra")) return [];
-  return db
-    .prepare("SELECT * FROM solicitacoes_compra ORDER BY id DESC")
-    .all();
+exports.list = () => {
+  if (!tableExists("solicitacoes")) return [];
+
+  return db.prepare(`
+    SELECT
+      id,
+      titulo,
+      setor,
+      prioridade,
+      status,
+      created_at
+    FROM solicitacoes
+    ORDER BY id DESC
+  `).all();
 };
 
-exports.create = ({ descricao, prioridade, created_by }) => {
-  if (!tableExists("solicitacoes_compra")) return;
+exports.create = ({ titulo, descricao, setor, prioridade, created_by }) => {
+  if (!tableExists("solicitacoes")) return;
 
   db.prepare(`
-    INSERT INTO solicitacoes_compra
-    (descricao, prioridade, status, created_by, created_at)
-    VALUES (?, ?, 'PENDENTE', ?, datetime('now'))
-  `).run(descricao, prioridade, created_by);
+    INSERT INTO solicitacoes
+    (titulo, descricao, setor, prioridade, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now'))
+  `).run(titulo, descricao, setor, prioridade, created_by);
 };
