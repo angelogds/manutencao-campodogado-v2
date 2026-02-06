@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS cotacoes (
   prazo_dias INTEGER NOT NULL DEFAULT 0,
   total REAL NOT NULL DEFAULT 0,
   created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
   FOREIGN KEY (solicitacao_id) REFERENCES solicitacoes(id) ON DELETE CASCADE,
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
@@ -82,4 +82,5 @@ CREATE TABLE IF NOT EXISTS cotacao_itens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cot_itens_cot ON cotacao_itens(cotacao_id);
+
 
