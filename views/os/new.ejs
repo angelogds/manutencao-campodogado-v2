@@ -1,24 +1,44 @@
+<% layout('layout') %>
+
+<style>
+  .card{ max-width:720px; background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  label{ font-weight:900; font-size:13px; color:#374151; }
+  input,select,textarea{ padding:10px 12px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; outline:none; }
+  textarea{ min-height:120px; resize:vertical; grid-column:1 / -1; }
+  .btn{ padding:12px 14px; border-radius:12px; border:0; background:#0b6b3a; color:#fff; font-weight:900; cursor:pointer; }
+</style>
+
 <h1>Abrir OS</h1>
 
-<form method="POST" action="/os" class="form">
-  <label>Título</label>
-  <input name="titulo" required />
+<div class="card">
+  <form method="POST" action="/os">
+    <div class="grid">
+      <div class="field">
+        <label>Equipamento</label>
+        <input name="equipamento" placeholder="Ex: Caldeira 1 / Digestor 2 / Prensa P50" required />
+      </div>
 
-  <label>Setor</label>
-  <input name="setor" placeholder="Ex: Fabricação Estrutural / Caldeira / Digestores" required />
+      <div class="field">
+        <label>Tipo</label>
+        <select name="tipo">
+          <option value="CORRETIVA">CORRETIVA</option>
+          <option value="PREVENTIVA">PREVENTIVA</option>
+          <option value="NR12">NR12</option>
+          <option value="OUTRA">OUTRA</option>
+        </select>
+      </div>
 
-  <label>Prioridade</label>
-  <select name="prioridade">
-    <option value="NORMAL">NORMAL</option>
-    <option value="ALTA">ALTA</option>
-    <option value="CRITICA">CRÍTICA</option>
-  </select>
+      <div class="field" style="grid-column:1/-1;">
+        <label>Descrição</label>
+        <textarea name="descricao" placeholder="Descreva o serviço..." required></textarea>
+      </div>
+    </div>
 
-  <label>Descrição</label>
-  <textarea name="descricao" rows="6" required></textarea>
-
-  <div style="margin-top:12px;">
-    <button class="btn" type="submit">Salvar</button>
-    <a class="btn btn-ghost" href="/os">Cancelar</a>
-  </div>
-</form>
+    <div style="margin-top:12px; display:flex; gap:10px;">
+      <button class="btn" type="submit">Abrir OS</button>
+      <a href="/os" style="padding:12px 14px; border:1px solid #e5e7eb; border-radius:12px; text-decoration:none; font-weight:900; color:#111827;">Cancelar</a>
+    </div>
+  </form>
+</div>
