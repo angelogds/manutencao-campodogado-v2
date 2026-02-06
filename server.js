@@ -67,6 +67,7 @@ const comprasRoutes = require("./modules/compras/compras.routes");
 const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
 const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
+const equipamentosRoutes = require("./modules/equipamentos/equipamentos.routes");
 
 // ===== Guard de rotas =====
 function safeUse(name, mw) {
@@ -84,6 +85,7 @@ safeUse("comprasRoutes", comprasRoutes);
 safeUse("estoqueRoutes", estoqueRoutes);
 safeUse("osRoutes", osRoutes);
 safeUse("usuariosRoutes", usuariosRoutes);
+safeUse("equipamentosRoutes", equipamentosRoutes);
 
 // ===== Home =====
 app.get("/", (req, res) => {
@@ -116,3 +118,4 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
