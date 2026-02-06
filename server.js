@@ -2,8 +2,6 @@
 require("dotenv").config();
 require("./database/migrate");
 
-const { ensureAdmin } = require("./database/seed");
-ensureAdmin();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
@@ -61,6 +59,20 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// ✅ Seed (não derruba o servidor se o arquivo não existir)
+try {
+  // precisa existir: /database/seed.js
+  const { ensureAdmin } = require("./database/seed");
+  if (typeof ensureAdmin === "function") {
+    ensureAdmin();
+  } else {
+    console.warn("⚠️ ensureAdmin não é função em ./database/seed");
+  }
+} catch (err) {
+  console.warn("⚠️ Seed não carregado (./database/seed). Motivo:", err.message);
+  console.warn("👉 Crie o arquivo: database/seed.js para ativar o seed do admin.");
+}
 
 // ===== Rotas (IMPORTA DEPOIS DO app criado) =====
 const authRoutes = require("./modules/auth/auth.routes");
@@ -120,5 +132,3 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
-
-
