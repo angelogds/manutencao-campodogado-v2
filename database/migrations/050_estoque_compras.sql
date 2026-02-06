@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS estoque (
   unidade TEXT NOT NULL DEFAULT 'UN',
   quantidade REAL NOT NULL DEFAULT 0,
   valor_unitario REAL NOT NULL DEFAULT 0,
-  atualizado_em TEXT NOT NULL DEFAULT (datetime('now','-3 hours'))
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_estoque_desc ON estoque(descricao);
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes (
   prioridade TEXT NOT NULL DEFAULT 'NORMAL', -- BAIXA | NORMAL | ALTA | URGENTE
   status TEXT NOT NULL DEFAULT 'ABERTA',     -- ABERTA | EM_COTACAO | APROVADA | REPROVADA | COMPRADA | RECEBIDA | CANCELADA
   created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS cotacoes (
   prazo_dias INTEGER NOT NULL DEFAULT 0,
   total REAL NOT NULL DEFAULT 0,
   created_by INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (solicitacao_id) REFERENCES solicitacoes(id) ON DELETE CASCADE,
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
