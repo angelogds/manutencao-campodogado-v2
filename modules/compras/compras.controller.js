@@ -1,7 +1,7 @@
 const service = require("./compras.service");
 
 exports.index = (req, res) => {
-  const items = service.listSafe();
+  const items = service.list();
 
   return res.render("compras/index", {
     title: "Compras",
@@ -16,15 +16,17 @@ exports.newForm = (req, res) => {
 };
 
 exports.create = (req, res) => {
-  const { descricao, prioridade } = req.body;
+  const { titulo, descricao, setor, prioridade } = req.body;
 
-  if (!descricao) {
-    req.flash("error", "Informe a descrição da compra.");
+  if (!titulo || !descricao || !setor) {
+    req.flash("error", "Preencha título, setor e descrição.");
     return res.redirect("/compras/new");
   }
 
   service.create({
+    titulo,
     descricao,
+    setor,
     prioridade: prioridade || "NORMAL",
     created_by: req.session.user.id,
   });
