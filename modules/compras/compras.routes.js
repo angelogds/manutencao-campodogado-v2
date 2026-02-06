@@ -8,7 +8,4 @@ router.get("/compras", requireLogin, controller.index);
 router.get("/compras/new", requireLogin, controller.newForm);
 router.post("/compras", requireLogin, controller.create);
 
-// Atualizar status
-router.post("/compras/:id/status", requireLogin, controller.updateStatus);
-
 module.exports = router;
