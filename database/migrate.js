@@ -1,7 +1,19 @@
-// database/migrate.js
+// /database/migrate.js
 const fs = require("fs");
 const path = require("path");
 const db = require("./db");
+
+const MIG_DIR = path.join(__dirname, "migrations");
+
+// remove BEGIN/COMMIT caso algum arquivo tenha (evita nested transaction)
+function cleanSql(sql) {
+  return String(sql)
+    .replace(/^\uFEFF/, "") // BOM
+    .replace(/^\s*BEGIN\s*;?\s*$/gim, "")
+    .replace(/^\s*BEGIN\s+TRANSACTION\s*;?\s*$/gim, "")
+    .replace(/^\s*COMMIT\s*;?\s*$/gim, "")
+    .replace(/^\s*END\s*;?\s*$/gim, "");
+}
 
 function ensureMigrationsTable() {
   db.exec(`
@@ -13,50 +25,46 @@ function ensureMigrationsTable() {
   `);
 }
 
-function getApplied() {
-  return new Set(
-    db.prepare("SELECT filename FROM migrations").all().map((r) => r.filename)
-  );
+function getAppliedSet() {
+  const rows = db.prepare("SELECT filename FROM migrations").all();
+  return new Set(rows.map((r) => r.filename));
+}
+
+function listSqlFiles() {
+  if (!fs.existsSync(MIG_DIR)) return [];
+  return fs
+    .readdirSync(MIG_DIR)
+    .filter((f) => f.endsWith(".sql"))
+    .sort((a, b) => a.localeCompare(b)); // 001, 005, 010...
 }
 
 function applyMigrations() {
   ensureMigrationsTable();
+  const applied = getAppliedSet();
+  const files = listSqlFiles();
 
-  const migrationsDir = path.join(__dirname, "migrations");
-  if (!fs.existsSync(migrationsDir)) return;
-
-  const files = fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith(".sql"))
-    .sort(); // IMPORTANTÍSSIMO: ordem
-
-  const applied = getApplied();
-
-  const insert = db.prepare("INSERT INTO migrations (filename) VALUES (?)");
-
-  const tx = db.transaction(() => {
+  const runAll = db.transaction(() => {
     for (const file of files) {
       if (applied.has(file)) continue;
 
-      const sql = fs.readFileSync(path.join(migrationsDir, file), "utf8");
+      const full = path.join(MIG_DIR, file);
+      const raw = fs.readFileSync(full, "utf-8");
+      const sql = cleanSql(raw).trim();
+
+      if (!sql) {
+        db.prepare("INSERT INTO migrations (filename) VALUES (?)").run(file);
+        console.log(`✔ Migration vazia marcada: ${file}`);
+        continue;
+      }
+
       db.exec(sql);
-      insert.run(file);
+
+      db.prepare("INSERT INTO migrations (filename) VALUES (?)").run(file);
       console.log(`✔ Migration aplicada: ${file}`);
     }
   });
 
-  tx();
-}
-
-function runSeeds() {
-  try {
-    require("./seeds/usuarios.seed"); // deve criar admin se faltar
-  } catch (e) {
-    console.log("⚠️ Seed não executada:", e.message);
-  }
+  runAll();
 }
 
 applyMigrations();
-runSeeds();
-
-module.exports = { applyMigrations };
