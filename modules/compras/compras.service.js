@@ -7,51 +7,41 @@ function tableExists(name) {
   return !!row;
 }
 
-function resolveTable() {
-  if (tableExists("compras")) return "compras";
-  if (tableExists("solicitacoes_compra")) return "solicitacoes_compra";
-  return null;
+function ensureTable() {
+  if (!tableExists("solicitacoes_compra")) {
+    throw new Error("Tabela solicitacoes_compra não existe. Rode as migrations.");
+  }
 }
 
-exports.list = ({ status } = {}) => {
-  const t = resolveTable();
-  if (!t) return [];
-
-  if (status) {
-    return db.prepare(`
-      SELECT id, descricao, prioridade, status, created_at
-      FROM ${t}
-      WHERE UPPER(status) = UPPER(?)
-      ORDER BY id DESC
-    `).all(status);
-  }
-
+exports.list = ({ status }) => {
+  ensureTable();
   return db.prepare(`
     SELECT id, descricao, prioridade, status, created_at
-    FROM ${t}
+    FROM solicitacoes_compra
+    WHERE status = ?
     ORDER BY id DESC
-  `).all();
+  `).all(status || "PENDENTE");
 };
 
-
 exports.create = ({ descricao, prioridade, created_by }) => {
-  const t = resolveTable();
-  if (!t) {
-    throw new Error(
-      "Tabela de compras não encontrada (compras / solicitacoes_compra)."
-    );
-  }
-
-  if (t === "compras") {
-    return db.prepare(`
-      INSERT INTO compras (descricao, prioridade, status, created_by, created_at)
-      VALUES (?, ?, 'PENDENTE', ?, datetime('now'))
-    `).run(descricao, prioridade, created_by);
-  }
-
-  // solicitacoes_compra
-  return db.prepare(`
+  ensureTable();
+  const res = db.prepare(`
     INSERT INTO solicitacoes_compra (descricao, prioridade, status, created_by, created_at)
     VALUES (?, ?, 'PENDENTE', ?, datetime('now'))
-  `).run(descricao, prioridade, created_by);
+  `).run(descricao, prioridade || "NORMAL", created_by || null);
+
+  return res.lastInsertRowid;
+};
+
+exports.updateStatus = ({ id, status }) => {
+  ensureTable();
+  const allowed = ["PENDENTE", "APROVADA", "RECEBIDA", "CANCELADA"];
+  const st = String(status || "").toUpperCase();
+  if (!allowed.includes(st)) throw new Error("Status inválido.");
+
+  db.prepare(`
+    UPDATE solicitacoes_compra
+    SET status = ?
+    WHERE id = ?
+  `).run(st, Number(id));
 };
