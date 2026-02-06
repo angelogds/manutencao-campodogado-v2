@@ -1,54 +1,41 @@
-// modules/dashboard/dashboard.service.js
 const db = require("../../database/db");
 
 function tableExists(name) {
   const row = db
-    .prepare(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name = ?`
-    )
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
     .get(name);
   return !!row;
 }
 
-function safeCount(sql, params = []) {
-  try {
-    return db.prepare(sql).get(...params)?.c ?? 0;
-  } catch {
-    return 0;
-  }
+function count(sql, params = []) {
+  const r = db.prepare(sql).get(...params);
+  return Number(r?.c || 0);
 }
 
-exports.getCounters = () => {
+exports.getCountersSafe = () => {
   const hasOS = tableExists("os");
-  const hasSolic = tableExists("solicitacoes");
-  const hasCot = tableExists("cotacoes");
-  const hasEstoque = tableExists("estoque");
+  const hasCompras = tableExists("compras") || tableExists("solicitacoes_compra");
+  const hasEstoque = tableExists("estoque_itens") || tableExists("estoque");
 
-  const counters = {
-    os_abertas: hasOS
-      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'ABERTA'`)
-      : 0,
-    os_andamento: hasOS
-      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'ANDAMENTO'`)
-      : 0,
-    os_concluidas: hasOS
-      ? safeCount(`SELECT COUNT(*) as c FROM os WHERE status = 'CONCLUIDA'`)
-      : 0,
+  return {
+    os_abertas: hasOS ? count("SELECT COUNT(*) c FROM os WHERE status='ABERTA'") : 0,
+    os_andamento: hasOS ? count("SELECT COUNT(*) c FROM os WHERE status='ANDAMENTO'") : 0,
+    os_concluidas: hasOS ? count("SELECT COUNT(*) c FROM os WHERE status='CONCLUIDA'") : 0,
 
-    solicitacoes_pendentes: hasSolic
-      ? safeCount(
-          `SELECT COUNT(*) as c FROM solicitacoes WHERE status IN ('ABERTA','PENDENTE','EM_COTACAO')`
+    compras_pendentes: hasCompras
+      ? (
+          tableExists("compras")
+            ? count("SELECT COUNT(*) c FROM compras WHERE status='PENDENTE'")
+            : count("SELECT COUNT(*) c FROM solicitacoes_compra WHERE status='PENDENTE'")
         )
       : 0,
 
-    cotacoes_total: hasCot
-      ? safeCount(`SELECT COUNT(*) as c FROM cotacoes`)
-      : 0,
-
-    itens_estoque: hasEstoque
-      ? safeCount(`SELECT COUNT(*) as c FROM estoque`)
+    estoque_itens: hasEstoque
+      ? (
+          tableExists("estoque_itens")
+            ? count("SELECT COUNT(*) c FROM estoque_itens")
+            : count("SELECT COUNT(*) c FROM estoque")
+        )
       : 0,
   };
-
-  return counters;
 };
