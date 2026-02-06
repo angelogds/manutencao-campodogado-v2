@@ -8,9 +8,12 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const engine = require("ejs-mate");
 
+// ✅ helper global de data/hora BR
+const { fmtBR, TZ } = require("./utils/date");
+
 const app = express();
 
-// ✅ Railway/Proxy: necessário pra cookie/sessão em HTTPS
+// ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
 app.set("trust proxy", 1);
 
 // ===== View engine =====
@@ -23,33 +26,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== Session Store (SQLite se disponível) =====
-let sessionStore = null;
-try {
-  const SQLiteStoreFactory = require("better-sqlite3-session-store");
-  const db = require("./database/db");
-  const SQLiteStore = SQLiteStoreFactory(session);
-  sessionStore = new SQLiteStore({
-    client: db,
-    expired: { clear: true, intervalMs: 24 * 60 * 60 * 1000 },
-  });
-  console.log("✅ Session store: SQLite (better-sqlite3-session-store)");
-} catch (e) {
-  console.log("⚠️ Session store: MemoryStore (dev) — instale better-sqlite3-session-store para produção.");
-}
-
 // ===== Session + Flash (ANTES das rotas) =====
 app.use(
   session({
-    store: sessionStore || undefined,
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
-    proxy: true,
+    proxy: true, // ✅ ajuda com proxy reverso
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: "auto", // ✅ Railway HTTPS / Local HTTP
+      secure: "auto", // ✅ não quebra no Railway e nem no local
     },
   })
 );
@@ -63,6 +50,11 @@ app.use((req, res, next) => {
     success: req.flash("success"),
     error: req.flash("error"),
   };
+
+  // ✅ Disponível em TODO EJS: <%= fmtBR(data) %>
+  res.locals.fmtBR = fmtBR;
+  res.locals.TZ = TZ;
+
   next();
 });
 
@@ -74,15 +66,16 @@ const estoqueRoutes = require("./modules/estoque/estoque.routes");
 const osRoutes = require("./modules/os/os.routes");
 const usuariosRoutes = require("./modules/usuarios/usuarios.routes");
 
-// ===== Guard de rotas (pra parar de rodar em círculos) =====
+// ===== Guard de rotas =====
 function safeUse(name, mw) {
   if (typeof mw !== "function") {
-    console.error(`❌ ROTA/MIDDLEWARE inválido: ${name}`, typeof mw);
+    console.error(`❌ ROTA/MIDDLEWARE inválido: ${name}`, typeof mw, mw);
     throw new Error(`Middleware inválido: ${name}`);
   }
   app.use(mw);
 }
 
+// ✅ ordem: auth primeiro
 safeUse("authRoutes", authRoutes);
 safeUse("dashboardRoutes", dashboardRoutes);
 safeUse("comprasRoutes", comprasRoutes);
@@ -96,12 +89,26 @@ app.get("/", (req, res) => {
   return res.redirect("/login");
 });
 
+// ===== Debug (remova depois) =====
+app.get("/debug-session", (req, res) => {
+  res.json({
+    hasSession: !!req.session,
+    user: req.session?.user || null,
+    cookieHeader: req.headers.cookie || null,
+    secure: req.secure,
+    xForwardedProto: req.headers["x-forwarded-proto"] || null,
+    tz: TZ,
+    nowBR: fmtBR(new Date(), { second: "2-digit" }),
+  });
+});
+
 // ===== Health =====
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
     app: "manutencao-campo-do-gado-v2",
-    timestamp: new Date().toISOString(),
+    timezone: TZ,
+    timestamp_utc: new Date().toISOString(),
   });
 });
 
