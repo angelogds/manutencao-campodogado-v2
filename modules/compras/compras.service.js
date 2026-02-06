@@ -4,8 +4,12 @@ function tableExists(name) {
   const row = db
     .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
     .get(name);
-  return !!row;
-}
+ const { formatBR } = require("../../utils/date");
+
+return rows.map(r => ({
+  ...r,
+  created_at: formatBR(r.created_at)
+}));
 
 exports.listSolicitacoes = ({ status } = {}) => {
   if (!tableExists("solicitacoes")) return [];
@@ -49,3 +53,4 @@ exports.getSolicitacao = (id) => {
     WHERE s.id = ?
   `).get(id);
 };
+
