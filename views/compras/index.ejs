@@ -1,3 +1,25 @@
-<% layout("layout") -%>
+<% layout('layout') %>
+
 <h1>Compras</h1>
-<p>Inbox de solicitações / cotações / aprovações (em breve).</p>
+
+<a href="/compras/new" class="btn primary">Nova Solicitação</a>
+
+<table style="width:100%; margin-top:16px;">
+  <tr>
+    <th>ID</th>
+    <th>Descrição</th>
+    <th>Prioridade</th>
+    <th>Status</th>
+    <th>Data</th>
+  </tr>
+
+  <% itens.forEach(i => { %>
+    <tr>
+      <td>#<%= i.id %></td>
+      <td><%= i.descricao %></td>
+      <td><%= i.prioridade %></td>
+      <td><%= i.status %></td>
+      <td><%= i.created_at %></td>
+    </tr>
+  <% }) %>
+</table>
