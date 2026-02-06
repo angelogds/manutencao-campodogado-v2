@@ -1,9 +1,10 @@
+// modules/auth/auth.controller.js
 const bcrypt = require("bcryptjs");
 const authService = require("./auth.service");
 
 exports.showLogin = (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
-  res.render("auth/login", { title: "Login" });
+  return res.render("auth/login", { title: "Login" });
 };
 
 exports.doLogin = (req, res) => {
@@ -14,32 +15,34 @@ exports.doLogin = (req, res) => {
     return res.redirect("/login");
   }
 
-  const user = authService.getUserByEmail(email.trim().toLowerCase());
+  const user = authService.getUserByEmail(email);
 
   if (!user) {
     req.flash("error", "Usuário não encontrado.");
     return res.redirect("/login");
   }
 
-  const ok = bcrypt.compareSync(password, user.password_hash);
+  if (!user.password_hash) {
+    req.flash("error", "Usuário sem senha cadastrada. Contate o administrador.");
+    return res.redirect("/login");
+  }
 
+  const ok = bcrypt.compareSync(password, user.password_hash);
   if (!ok) {
     req.flash("error", "Senha inválida.");
     return res.redirect("/login");
   }
 
-  // ✅ SALVA NA SESSÃO
+  // ✅ SALVA NA SESSÃO (padronizado)
   req.session.user = {
     id: user.id,
-    name: user.name,
+    nome: user.nome,       // pt-BR (padrão do sistema)
+    name: user.nome,       // compatibilidade
     email: user.email,
-    role: user.role,
+    role: user.role || "USER",
   };
 
-  // ✅ GARANTE PERSISTÊNCIA
-  req.session.save(() => {
-    res.redirect("/dashboard");
-  });
+  req.session.save(() => res.redirect("/dashboard"));
 };
 
 exports.logout = (req, res) => {
