@@ -1,17 +1,52 @@
+<% layout('layout') %>
+
+<style>
+  .card{ max-width:920px; background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; }
+  .badge{ padding:6px 12px; border-radius:999px; font-weight:900; font-size:12px; display:inline-block; }
+  .b-aberta{ background:rgba(59,130,246,.10); border:1px solid rgba(59,130,246,.25); }
+  .b-andamento{ background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.25); }
+  .b-pausada{ background:rgba(107,114,128,.10); border:1px solid rgba(107,114,128,.25); }
+  .b-concluida{ background:rgba(11,107,58,.10); border:1px solid rgba(11,107,58,.25); }
+  .b-cancelada{ background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.25); }
+  .meta{ color:#6b7280; font-size:13px; }
+  select{ padding:10px 12px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; }
+  .btn{ padding:10px 12px; border-radius:12px; border:0; background:#0b6b3a; color:#fff; font-weight:900; cursor:pointer; }
+</style>
+
+<% const cls = os.status === 'ABERTA' ? 'b-aberta'
+  : os.status === 'ANDAMENTO' ? 'b-andamento'
+  : os.status === 'PAUSADA' ? 'b-pausada'
+  : os.status === 'CONCLUIDA' ? 'b-concluida'
+  : 'b-cancelada'; %>
+
 <h1>OS #<%= os.id %></h1>
 
-<div class="card" style="padding:14px;">
-  <p><b>Título:</b> <%= os.titulo %></p>
-  <p><b>Setor:</b> <%= os.setor %></p>
-  <p><b>Prioridade:</b> <%= os.prioridade %></p>
-  <p><b>Status:</b> <%= os.status %></p>
-  <p><b>Data:</b> <%= os.created_at %></p>
+<div class="card">
+  <div style="display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap;">
+    <div>
+      <div style="font-weight:900; font-size:18px;"><%= os.equipamento %></div>
+      <div class="meta">Tipo: <strong><%= os.tipo %></strong> • Abertura: <%= os.opened_at %></div>
+    </div>
+    <div><span class="badge <%= cls %>"><%= os.status %></span></div>
+  </div>
 
-  <hr style="margin:12px 0;" />
+  <hr style="border:0; border-top:1px solid #e5e7eb; margin:14px 0;" />
 
-  <p style="white-space:pre-wrap;"><%= os.descricao %></p>
-</div>
+  <div style="white-space:pre-wrap; line-height:1.45;"><%= os.descricao %></div>
 
-<div style="margin-top:12px;">
-  <a class="btn btn-ghost" href="/os">Voltar</a>
+  <hr style="border:0; border-top:1px solid #e5e7eb; margin:14px 0;" />
+
+  <form method="POST" action="/os/<%= os.id %>/status" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <label style="font-weight:900;">Alterar status:</label>
+    <select name="status">
+      <option value="ABERTA" <%= os.status==='ABERTA'?'selected':'' %>>ABERTA</option>
+      <option value="ANDAMENTO" <%= os.status==='ANDAMENTO'?'selected':'' %>>ANDAMENTO</option>
+      <option value="PAUSADA" <%= os.status==='PAUSADA'?'selected':'' %>>PAUSADA</option>
+      <option value="CONCLUIDA" <%= os.status==='CONCLUIDA'?'selected':'' %>>CONCLUIDA</option>
+      <option value="CANCELADA" <%= os.status==='CANCELADA'?'selected':'' %>>CANCELADA</option>
+    </select>
+    <button class="btn" type="submit">Salvar</button>
+
+    <a href="/os" style="padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px; text-decoration:none; font-weight:900; color:#111827;">Voltar</a>
+  </form>
 </div>
