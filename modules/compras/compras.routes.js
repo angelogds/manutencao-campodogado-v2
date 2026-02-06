@@ -7,8 +7,10 @@ const controller = require("./compras.controller");
 router.get("/compras", requireLogin, controller.index);
 router.get("/compras/new", requireLogin, controller.newForm);
 router.post("/compras", requireLogin, controller.create);
+router.get("/compras/:id", requireLogin, controller.view);
 
 // ✅ precisa existir pra abrir /compras/1
 router.get("/compras/:id", requireLogin, controller.view);
 
 module.exports = router;
+
