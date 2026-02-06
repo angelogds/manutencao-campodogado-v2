@@ -13,14 +13,6 @@ const { fmtBR, TZ } = require("./utils/date");
 
 const app = express();
 
-app.locals.TZ = TZ;
-
-// deixa disponível em TODAS as views EJS
-app.use((req, res, next) => {
-  res.locals.fmtBR = fmtBR;
-  next();
-});
-
 // ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
 app.set("trust proxy", 1);
 
@@ -40,18 +32,20 @@ app.use(
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
-    proxy: true, // ✅ ajuda com proxy reverso
+    proxy: true,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: "auto", // ✅ não quebra no Railway e nem no local
+      secure: "auto",
     },
   })
 );
 
 app.use(flash());
 
-// ===== Globals =====
+// ===== Globals (disponível em todas as views) =====
+app.locals.TZ = TZ;
+
 app.use((req, res, next) => {
   res.locals.user = req.session?.user || null;
   res.locals.flash = {
@@ -106,7 +100,7 @@ app.get("/debug-session", (req, res) => {
     secure: req.secure,
     xForwardedProto: req.headers["x-forwarded-proto"] || null,
     tz: TZ,
-    nowBR: fmtBR(new Date(), { second: "2-digit" }),
+    nowBR: fmtBR(new Date()),
   });
 });
 
@@ -122,4 +116,3 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
-
