@@ -1,27 +1,39 @@
 const service = require("./compras.service");
 
-exports.list = (req, res) => {
-  const items = service.list();
-  return res.render("compras/index", { title: "Compras", items });
+exports.index = (req, res) => {
+  const itens = service.list();
+
+  return res.render("compras/index", {
+    title: "Compras",
+    itens,
+  });
+};
+
+exports.newForm = (req, res) => {
+  return res.render("compras/new", {
+    title: "Nova Solicitação de Compra",
+  });
 };
 
 exports.create = (req, res) => {
-  const { item, qtd } = req.body;
-  if (!item || !qtd) {
-    req.flash("error", "Preencha item e quantidade.");
-    return res.redirect("/compras");
-  }
-  service.create({ item, qtd: Number(qtd) });
-  req.flash("success", "Solicitação criada.");
-  return res.redirect("/compras");
-};
+  const { descricao, prioridade } = req.body;
 
-exports.receive = (req, res) => {
-  try {
-    service.receive({ id: Number(req.params.id) });
-    req.flash("success", "Compra recebida e enviada ao estoque.");
-  } catch (e) {
-    req.flash("error", e.message);
+  if (!descricao) {
+    req.flash("error", "Informe a descrição da compra.");
+    return res.redirect("/compras/new");
   }
-  return res.redirect("/compras");
+
+  try {
+    service.create({
+      descricao,
+      prioridade: prioridade || "NORMAL",
+      created_by: req.session.user.id,
+    });
+
+    req.flash("success", "Solicitação de compra criada.");
+    return res.redirect("/compras");
+  } catch (e) {
+    req.flash("error", e.message || "Erro ao criar solicitação.");
+    return res.redirect("/compras/new");
+  }
 };
