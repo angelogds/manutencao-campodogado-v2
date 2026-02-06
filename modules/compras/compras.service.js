@@ -7,67 +7,45 @@ function tableExists(name) {
   return !!row;
 }
 
-// ===== LISTA SOLICITAÇÕES =====
 exports.listSolicitacoes = ({ status } = {}) => {
   if (!tableExists("solicitacoes")) return [];
 
-  // sem join em users (porque teu users pode não ter coluna "nome")
+  // status opcional
   if (status && status !== "TODOS") {
-    return db
-      .prepare(
-        `
-        SELECT
-          id, titulo, setor, prioridade, status, created_at, created_by
-        FROM solicitacoes
-        WHERE status = ?
-        ORDER BY id DESC
-      `
-      )
-      .all(status);
-  }
-
-  return db
-    .prepare(
-      `
+    return db.prepare(`
       SELECT
-        id, titulo, setor, prioridade, status, created_at, created_by
-      FROM solicitacoes
-      ORDER BY id DESC
-    `
-    )
-    .all();
-};
-
-// ===== CRIA SOLICITAÇÃO =====
-exports.createSolicitacao = ({ titulo, descricao, setor, prioridade, created_by }) => {
-  if (!tableExists("solicitacoes")) {
-    throw new Error("Tabela solicitacoes não existe. Rode as migrations.");
+        s.id, s.titulo, s.setor, s.prioridade, s.status, s.created_at
+      FROM solicitacoes s
+      ORDER BY s.id DESC
+    `).all().filter((x) => x.status === status);
   }
 
-  const res = db
-    .prepare(
-      `
-      INSERT INTO solicitacoes (titulo, descricao, setor, prioridade, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now'))
-    `
-    )
-    .run(titulo, descricao, setor, prioridade || "NORMAL", created_by);
-
-  return res.lastInsertRowid;
+  return db.prepare(`
+    SELECT
+      s.id, s.titulo, s.setor, s.prioridade, s.status, s.created_at
+    FROM solicitacoes s
+    ORDER BY s.id DESC
+  `).all();
 };
 
-// ===== PEGA 1 SOLICITAÇÃO =====
-exports.getSolicitacaoById = (id) => {
+exports.createSolicitacao = ({ titulo, setor, prioridade, descricao, created_by }) => {
+  if (!tableExists("solicitacoes")) throw new Error("Tabela solicitacoes não existe.");
+
+  const res = db.prepare(`
+    INSERT INTO solicitacoes (titulo, descricao, setor, prioridade, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now'))
+  `).run(titulo, descricao, setor, prioridade, created_by);
+
+  return Number(res.lastInsertRowid);
+};
+
+exports.getSolicitacao = (id) => {
   if (!tableExists("solicitacoes")) return null;
 
-  return db
-    .prepare(
-      `
-      SELECT
-        id, titulo, descricao, setor, prioridade, status, created_at, created_by
-      FROM solicitacoes
-      WHERE id = ?
-    `
-    )
-    .get(id);
+  return db.prepare(`
+    SELECT
+      s.id, s.titulo, s.descricao, s.setor, s.prioridade, s.status, s.created_by, s.created_at
+    FROM solicitacoes s
+    WHERE s.id = ?
+  `).get(id);
 };
