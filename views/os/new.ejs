@@ -18,7 +18,17 @@
       <div class="field">
         <label>Equipamento</label>
         <input name="equipamento" placeholder="Ex: Caldeira 1 / Digestor 2 / Prensa P50" required />
-      </div>
+      </div> 
+
+<div class="form-group">
+  <label for="equipamento_id">Equipamento</label>
+  <select id="equipamento_id" name="equipamento_id" required>
+    <option value="">Selecione...</option>
+    <% (equipamentos || []).forEach((e) => { %>
+      <option value="<%= e.id %>">[<%= e.setor %>] <%= e.nome %><%= e.codigo ? (" - " + e.codigo) : "" %></option>
+    <% }) %>
+  </select>
+</div>
 
       <div class="field">
         <label>Tipo</label>
