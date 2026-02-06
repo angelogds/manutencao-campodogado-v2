@@ -11,14 +11,15 @@ exports.listOS = ({ status }) => {
   `).all(status);
 };
 
-exports.createOS = ({ equipamento, descricao, tipo, opened_by }) => {
+exports.createOS = ({ equipamento_id, descricao, tipo, opened_by }) => {
   const res = db.prepare(`
-    INSERT INTO os (equipamento, descricao, tipo, status, opened_by, opened_at)
-    VALUES (?, ?, ?, 'ABERTA', ?, datetime('now'))
-  `).run(equipamento, descricao, tipo || "CORRETIVA", opened_by);
+    INSERT INTO os (equipamento_id, descricao, tipo, status, opened_by, opened_at)
+    VALUES (?, ?, ?, 'ABERTA', ?, datetime('now','-3 hours'))
+  `).run(equipamento_id, descricao, tipo || "CORRETIVA", opened_by);
 
   return res.lastInsertRowid;
 };
+
 
 exports.getOSById = (id) => {
   return db.prepare(`
@@ -40,3 +41,4 @@ exports.updateStatus = ({ id, status, userId }) => {
     WHERE id = ?
   `).run(status, closing ? 1 : 0, userId, closing ? 1 : 0, id);
 };
+
