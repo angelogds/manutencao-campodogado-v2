@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('ADMIN','DIRECAO','RH','COMPRAS','MANUTENCAO')),
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+ created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
 );
