@@ -13,6 +13,14 @@ const { fmtBR, TZ } = require("./utils/date");
 
 const app = express();
 
+app.locals.TZ = TZ;
+
+// deixa disponível em TODAS as views EJS
+app.use((req, res, next) => {
+  res.locals.fmtBR = fmtBR;
+  next();
+});
+
 // ✅ Railway/Proxy (resolve login que “não segura” sessão em HTTPS)
 app.set("trust proxy", 1);
 
@@ -114,3 +122,4 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
