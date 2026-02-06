@@ -1,40 +1,60 @@
+<% layout('layout') %>
+
+<style>
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .pill{ padding:8px 12px; border:1px solid #e5e7eb; border-radius:999px; text-decoration:none; color:#111827; font-weight:800; background:#fff; }
+  .pill.active{ border-color: rgba(11,107,58,.35); background: rgba(11,107,58,.06); }
+  table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; }
+  th,td{ padding:12px; border-bottom:1px solid #e5e7eb; text-align:left; font-size:14px; }
+  th{ background:#f9fafb; font-weight:900; }
+  .badge{ padding:5px 10px; border-radius:999px; font-weight:900; font-size:12px; display:inline-block; }
+  .b-aberta{ background:rgba(59,130,246,.10); border:1px solid rgba(59,130,246,.25); }
+  .b-andamento{ background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.25); }
+  .b-pausada{ background:rgba(107,114,128,.10); border:1px solid rgba(107,114,128,.25); }
+  .b-concluida{ background:rgba(11,107,58,.10); border:1px solid rgba(11,107,58,.25); }
+  .b-cancelada{ background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.25); }
+</style>
+
 <h1>Ordens de Serviço</h1>
 
-<div style="display:flex; gap:10px; align-items:center; margin:12px 0;">
-  <a class="btn" href="/os/new">+ Abrir OS</a>
+<div class="row">
+  <a class="pill <%= status==='ABERTA'?'active':'' %>" href="/os?status=ABERTA">Abertas</a>
+  <a class="pill <%= status==='ANDAMENTO'?'active':'' %>" href="/os?status=ANDAMENTO">Em andamento</a>
+  <a class="pill <%= status==='PAUSADA'?'active':'' %>" href="/os?status=PAUSADA">Pausadas</a>
+  <a class="pill <%= status==='CONCLUIDA'?'active':'' %>" href="/os?status=CONCLUIDA">Concluídas</a>
+  <a class="pill <%= status==='CANCELADA'?'active':'' %>" href="/os?status=CANCELADA">Canceladas</a>
 
-  <form method="GET" action="/os" style="display:flex; gap:8px;">
-    <select name="status">
-      <option value="ABERTA" <%= status==="ABERTA"?"selected":"" %>>Abertas</option>
-      <option value="ANDAMENTO" <%= status==="ANDAMENTO"?"selected":"" %>>Em andamento</option>
-      <option value="CONCLUIDA" <%= status==="CONCLUIDA"?"selected":"" %>>Concluídas</option>
-    </select>
-    <button class="btn btn-ghost" type="submit">Filtrar</button>
-  </form>
+  <div style="flex:1"></div>
+  <a class="pill" href="/os/new">+ Abrir OS</a>
 </div>
 
-<table class="table">
+<table>
   <thead>
     <tr>
       <th>#</th>
-      <th>Título</th>
-      <th>Setor</th>
-      <th>Prioridade</th>
+      <th>Equipamento</th>
+      <th>Tipo</th>
       <th>Status</th>
-      <th>Data</th>
-      <th></th>
+      <th>Abertura</th>
     </tr>
   </thead>
   <tbody>
+    <% if (!items || items.length === 0) { %>
+      <tr><td colspan="5" style="color:#6b7280;">Nenhuma OS encontrada.</td></tr>
+    <% } %>
+
     <% items.forEach(o => { %>
+      <% const cls = o.status === 'ABERTA' ? 'b-aberta'
+        : o.status === 'ANDAMENTO' ? 'b-andamento'
+        : o.status === 'PAUSADA' ? 'b-pausada'
+        : o.status === 'CONCLUIDA' ? 'b-concluida'
+        : 'b-cancelada'; %>
       <tr>
-        <td><%= o.id %></td>
-        <td><%= o.titulo %></td>
-        <td><%= o.setor %></td>
-        <td><span class="badge"><%= o.prioridade %></span></td>
-        <td><span class="badge"><%= o.status %></span></td>
-        <td><%= o.created_at %></td>
-        <td><a class="btn btn-small" href="/os/<%= o.id %>">Ver</a></td>
+        <td><a href="/os/<%= o.id %>" style="font-weight:900; color:#0b6b3a; text-decoration:none;">#<%= o.id %></a></td>
+        <td><%= o.equipamento %></td>
+        <td><%= o.tipo %></td>
+        <td><span class="badge <%= cls %>"><%= o.status %></span></td>
+        <td><%= o.opened_at %></td>
       </tr>
     <% }) %>
   </tbody>
