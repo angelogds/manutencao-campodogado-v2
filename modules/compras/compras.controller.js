@@ -1,23 +1,25 @@
-// modules/compras/compras.controller.js
 const service = require("./compras.service");
 
+// GET /compras
 exports.index = (req, res) => {
-  const status = (req.query.status || "TODOS").toString();
-  const itens = service.listSolicitacoes(status);
+  const status = (req.query.status || "TODOS").toUpperCase();
+  const itens = service.listSolicitacoes({ status });
 
   return res.render("compras/index", {
     title: "Compras",
-    itens,   // ✅ seu index.ejs usa "itens"
     status,
+    itens,
   });
 };
 
-exports.newForm = (req, res) => {
+// GET /compras/new
+exports.newForm = (_req, res) => {
   return res.render("compras/new", {
     title: "Nova Solicitação",
   });
 };
 
+// POST /compras
 exports.create = (req, res) => {
   const { titulo, setor, prioridade, descricao } = req.body;
 
@@ -35,6 +37,7 @@ exports.create = (req, res) => {
   return res.redirect(`/compras/${id}`);
 };
 
+// GET /compras/:id
 exports.view = (req, res) => {
   const id = Number(req.params.id);
   const item = service.getSolicitacao(id);
@@ -44,9 +47,9 @@ exports.view = (req, res) => {
     return res.redirect("/compras");
   }
 
-return res.render("compras/view", {
-  title: `Solicitação #${item.id}`,
-  solicitacao: item, // ✅ o EJS espera isso
-});
-
-
+  // ✅ O seu view.ejs usa "solicitacao"
+  return res.render("compras/view", {
+    title: `Solicitação #${item.id}`,
+    solicitacao: item,
+  });
+};
