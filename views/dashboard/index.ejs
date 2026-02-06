@@ -1,60 +1,161 @@
 <% layout('layout') %>
 
 <style>
+  .dash-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+  }
+  .dash-title{
+    margin:0;
+    font-size:26px;
+    font-weight:1000;
+    color:#0b6b3a;
+    letter-spacing:-0.5px;
+  }
+  .dash-sub{
+    margin:6px 0 0;
+    color:#6b7280;
+    font-size:13px;
+    font-weight:700;
+  }
+
   .grid{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px; }
-  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
-  .k{ color:#6b7280; font-weight:800; font-size:13px; }
-  .v{ font-size:34px; font-weight:900; margin-top:6px; }
-  .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
+  .card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 10px 26px rgba(0,0,0,.06);
+  }
+
+  .k{ color:#6b7280; font-weight:900; font-size:12px; letter-spacing:.2px; text-transform:uppercase; }
+  .v{ font-size:34px; font-weight:1000; margin-top:6px; color:#111827; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    background:#fff;
+    text-decoration:none;
+    font-weight:900;
+    color:#111827;
+  }
   .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
-  @media(max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+  .btn.primary:hover{ filter:brightness(.95); }
+  .btn:hover{ background:#f9fafb; }
+
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    border:1px solid #e5e7eb;
+    background:#f9fafb;
+    color:#374151;
+  }
+  .tag.green{ background: rgba(11,107,58,.08); border-color: rgba(11,107,58,.20); color:#0b6b3a; }
+
+  @media(max-width: 900px){
+    .grid{ grid-template-columns:1fr; }
+    .dash-head{ flex-direction:column; align-items:flex-start; }
+  }
 </style>
 
-<h1>Dashboard</h1>
-<p style="color:#6b7280; margin-top:-6px;">
-  Bem-vindo, <strong><%= user?.nome || "Usuário" %></strong>. Perfil: <strong><%= user?.role || user?.perfil || "USER" %></strong>
-</p>
+<div class="dash-head">
+  <div>
+    <h1 class="dash-title">Dashboard</h1>
+    <p class="dash-sub">
+      Bem-vindo, <strong><%= user?.name || "Usuário" %></strong>
+      • Perfil: <strong><%= user?.role || "USER" %></strong>
+    </p>
+  </div>
+
+  <div class="tag green">
+    ✅ Sistema V2 • Campo do Gado
+  </div>
+</div>
 
 <div class="grid">
+
+  <!-- OS -->
   <div class="card">
     <div class="k">OS Abertas</div>
     <div class="v"><%= counters.os_abertas %></div>
-    <a class="btn" href="/os?status=ABERTA">Ver OS</a>
-    <a class="btn primary" href="/os/new" style="margin-left:8px;">Abrir OS</a>
+    <div class="row">
+      <a class="btn" href="/os?status=ABERTA">Ver OS</a>
+      <a class="btn primary" href="/os/new">Abrir OS</a>
+    </div>
   </div>
 
   <div class="card">
     <div class="k">OS em Andamento</div>
     <div class="v"><%= counters.os_andamento %></div>
-    <a class="btn" href="/os?status=ANDAMENTO">Acompanhar</a>
+    <div class="row">
+      <a class="btn" href="/os?status=ANDAMENTO">Acompanhar</a>
+    </div>
   </div>
 
   <div class="card">
     <div class="k">OS Concluídas</div>
     <div class="v"><%= counters.os_concluidas %></div>
-    <a class="btn" href="/os?status=CONCLUIDA">Histórico</a>
-  </div>
-
-  <div class="card">
-    <div class="k">Compras Pendentes</div>
-    <div class="v"><%= counters.compras_pendentes %></div>
-    <a class="btn" href="/compras">Ir para Compras</a>
-  </div>
-
-  <div class="card">
-    <div class="k">Itens no Estoque</div>
-    <div class="v"><%= counters.estoque_itens %></div>
-    <a class="btn" href="/estoque">Ver Estoque</a>
-  </div>
-
-  <div class="card">
-    <div class="k">Admin</div>
-    <div style="margin-top:10px;">
-      <% if ((user?.role || user?.perfil) === "ADMIN") { %>
-        <a class="btn" href="/admin/users">Usuários</a>
-      <% } else { %>
-        <span style="color:#6b7280;">Sem acesso</span>
-      <% } %>
+    <div class="row">
+      <a class="btn" href="/os?status=CONCLUIDA">Histórico</a>
     </div>
   </div>
+
+  <!-- COMPRAS (solicitacoes + cotacoes) -->
+  <div class="card">
+    <div class="k">Solicitações de Compra</div>
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <span class="tag">Abertas: <strong><%= counters.solicitacoes_abertas %></strong></span>
+      <span class="tag">Em cotação: <strong><%= counters.solicitacoes_em_cotacao %></strong></span>
+      <span class="tag">Aprovadas: <strong><%= counters.solicitacoes_aprovadas %></strong></span>
+      <span class="tag green">Cotações: <strong><%= counters.cotacoes_total %></strong></span>
+    </div>
+    <div class="row">
+      <a class="btn" href="/compras">Ir para Compras</a>
+      <a class="btn" href="/solicitacoes">Solicitações</a>
+    </div>
+  </div>
+
+  <!-- ESTOQUE -->
+  <div class="card">
+    <div class="k">Estoque</div>
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <span class="tag">Itens cadastrados: <strong><%= counters.estoque_itens %></strong></span>
+      <span class="tag">Qtd total: <strong><%= counters.estoque_total_qtd %></strong></span>
+      <span class="tag green">Valor total: <strong>R$ <%= Number(counters.estoque_total_valor || 0).toFixed(2).replace(".", ",") %></strong></span>
+    </div>
+    <div class="row">
+      <a class="btn" href="/estoque">Ver Estoque</a>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="card">
+    <div class="k">Admin</div>
+
+    <% if ((user?.role) === "ADMIN") { %>
+      <div class="v" style="font-size:18px; margin-top:10px;">Acesso liberado</div>
+      <div class="row">
+        <a class="btn" href="/admin/users">Usuários</a>
+      </div>
+    <% } else { %>
+      <div class="v" style="font-size:18px; margin-top:10px; color:#6b7280;">Somente leitura</div>
+      <div style="margin-top:8px; color:#6b7280; font-weight:800;">
+        Sem acesso ao gerenciamento de usuários.
+      </div>
+    <% } %>
+  </div>
+
 </div>
