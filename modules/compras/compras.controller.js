@@ -44,8 +44,9 @@ exports.view = (req, res) => {
     return res.redirect("/compras");
   }
 
-  return res.render("compras/view", {
-    title: `Solicitação #${item.id}`,
-    item,
-  });
-};
+return res.render("compras/view", {
+  title: `Solicitação #${item.id}`,
+  solicitacao: item, // ✅ o EJS espera isso
+});
+
+
