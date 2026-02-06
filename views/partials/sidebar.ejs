@@ -1,47 +1,139 @@
-<aside class="sidebar">
-  <div class="sidebar-head">
-    <div class="logo">
-      <span class="logo-mark">CG</span>
-      <span class="logo-text">Campo do Gado</span>
-    </div>
+<style>
+  .sidebar{
+    background:#0b6b3a;
+    color:#fff;
+    padding:16px 14px;
+    border-right: 1px solid rgba(255,255,255,.14);
+    min-height:100vh;
+  }
+  .side-brand{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 10px;
+    border-radius:14px;
+    background: rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    margin-bottom:12px;
+  }
+  .side-logo{
+    width:36px; height:36px; border-radius:12px;
+    background: rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900;
+  }
+  .side-title{ font-weight:900; line-height:1.05; }
+  .side-sub{ font-size:12px; opacity:.85; }
+
+  .nav{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .nav a{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    text-decoration:none;
+    color:#fff;
+    padding:10px 10px;
+    border-radius:14px;
+    border:1px solid transparent;
+    background: rgba(255,255,255,.08);
+    font-weight:800;
+  }
+  .nav a:hover{
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.18);
+  }
+  .nav small{
+    opacity:.9;
+    font-weight:700;
+    background: rgba(0,0,0,.20);
+    padding:2px 8px;
+    border-radius:999px;
+  }
+
+  .nav-section{
+    margin-top:12px;
+    font-size:12px;
+    letter-spacing:.08em;
+    opacity:.85;
+    padding: 10px 10px 6px;
+    text-transform: uppercase;
+  }
+
+  .side-foot{
+    margin-top:14px;
+    padding:10px;
+    border-radius:14px;
+    background: rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    font-size:12px;
+    opacity:.92;
+  }
+</style>
+
+<%
+  const role = user?.role || "GUEST";
+  const is = (r) => role === r;
+  const any = (arr) => arr.includes(role);
+
+  const canAdmin = is("ADMIN");
+  const canDirecao = any(["DIRECAO","ADMIN"]);
+  const canRH = any(["RH","ADMIN"]);
+  const canCompras = any(["COMPRAS","ADMIN"]);
+  const canManut = any(["MANUTENCAO","ADMIN"]);
+%>
+
+<div class="side-brand">
+  <div class="side-logo">CG</div>
+  <div>
+    <div class="side-title">Campo do Gado</div>
+    <div class="side-sub">Sistema de Manutenção V2</div>
   </div>
+</div>
 
-  <nav class="menu">
-    <% if (user) { %>
-      <a class="menu-item" href="/dashboard">Dashboard</a>
+<div class="nav">
+  <a href="/dashboard"><span>Dashboard</span><small>Home</small></a>
 
-      <% if (["ADMIN","MANUTENCAO","RH"].includes(user.role)) { %>
-        <a class="menu-item" href="/os">Ordens de Serviço</a>
-      <% } %>
+  <% if (user) { %>
+    <div class="nav-section">Manutenção</div>
+    <a href="/os"><span>Ordens de Serviço</span><small>OS</small></a>
+    <a href="/os/new"><span>Abrir OS</span><small>+</small></a>
 
-      <% if (["ADMIN","MANUTENCAO"].includes(user.role)) { %>
-        <a class="menu-item" href="/compras/solicitacoes">Solicitações de Compra</a>
-      <% } %>
+    <div class="nav-section">Solicitações</div>
+    <a href="/solicitacoes"><span>Solicitações</span><small>Lista</small></a>
+    <a href="/solicitacoes/new"><span>Nova Solicitação</span><small>+</small></a>
 
-      <% if (["ADMIN","COMPRAS"].includes(user.role)) { %>
-        <a class="menu-item" href="/compras">Compras (Inbox)</a>
-        <a class="menu-item" href="/estoque">Estoque</a>
-      <% } %>
-
-      <% if (["ADMIN","DIRECAO"].includes(user.role)) { %>
-        <a class="menu-item" href="/dashboard/custos">Custos (Leitura)</a>
-      <% } %>
-
-      <% if (["ADMIN","RH"].includes(user.role)) { %>
-        <a class="menu-item" href="/nao-conformidades">NC / NR12</a>
-      <% } %>
-
-      <% if (["ADMIN"].includes(user.role)) { %>
-        <div class="menu-sep"></div>
-        <div class="menu-title">Admin</div>
-        <a class="menu-item" href="/admin/users">Usuários</a>
-      <% } %>
-    <% } else { %>
-      <a class="menu-item" href="/login">Login</a>
+    <% if (canCompras) { %>
+      <div class="nav-section">Compras</div>
+      <a href="/compras"><span>Inbox Compras</span><small>IN</small></a>
+      <a href="/compras/estoque"><span>Entrada Estoque</span><small>+</small></a>
     <% } %>
-  </nav>
 
-  <div class="sidebar-foot">
-    <small>© <%= new Date().getFullYear() %> Campo do Gado</small>
-  </div>
-</aside>
+    <div class="nav-section">Estoque</div>
+    <a href="/estoque"><span>Itens e Saldo</span><small>Σ</small></a>
+
+    <% if (canDirecao) { %>
+      <div class="nav-section">Direção</div>
+      <a href="/dashboard"><span>Indicadores</span><small>ROI</small></a>
+    <% } %>
+
+    <% if (canRH) { %>
+      <div class="nav-section">RH</div>
+      <a href="/nao-conformidades"><span>NC / NR12</span><small>NR</small></a>
+    <% } %>
+
+    <% if (canAdmin) { %>
+      <div class="nav-section">Admin</div>
+      <a href="/admin/users"><span>Usuários</span><small>RBAC</small></a>
+    <% } %>
+
+  <% } else { %>
+    <a href="/login"><span>Entrar</span><small>Login</small></a>
+  <% } %>
+</div>
+
+<div class="side-foot">
+  <div><strong>Perfil:</strong> <%= role %></div>
+  <div style="margin-top:6px;">Versão: <strong>V2</strong></div>
+</div>
