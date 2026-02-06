@@ -1,161 +1,127 @@
 <% layout('layout') %>
 
 <style>
-  .dash-head{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:16px;
-    margin-bottom:14px;
-  }
-  .dash-title{
-    margin:0;
-    font-size:26px;
-    font-weight:1000;
-    color:#0b6b3a;
-    letter-spacing:-0.5px;
-  }
-  .dash-sub{
-    margin:6px 0 0;
-    color:#6b7280;
-    font-size:13px;
-    font-weight:700;
-  }
-
   .grid{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px; }
   .card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:16px;
-    padding:16px;
+    background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px;
     box-shadow:0 10px 26px rgba(0,0,0,.06);
   }
-
-  .k{ color:#6b7280; font-weight:900; font-size:12px; letter-spacing:.2px; text-transform:uppercase; }
-  .v{ font-size:34px; font-weight:1000; margin-top:6px; color:#111827; }
-  .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-
+  .k{ color:#6b7280; font-weight:900; font-size:12px; letter-spacing:.06em; }
+  .v{ font-size:34px; font-weight:900; margin-top:6px; color:#111827; }
   .btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid #e5e7eb;
-    background:#fff;
-    text-decoration:none;
-    font-weight:900;
-    color:#111827;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff;
+    text-decoration:none; font-weight:900; color:#111827; height:40px;
   }
   .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
-  .btn.primary:hover{ filter:brightness(.95); }
-  .btn:hover{ background:#f9fafb; }
-
-  .tag{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:6px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:900;
-    border:1px solid #e5e7eb;
-    background:#f9fafb;
-    color:#374151;
-  }
-  .tag.green{ background: rgba(11,107,58,.08); border-color: rgba(11,107,58,.20); color:#0b6b3a; }
-
+  .row-actions{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .muted{ color:#6b7280; }
+  .span2{ grid-column: span 2; }
   @media(max-width: 900px){
     .grid{ grid-template-columns:1fr; }
-    .dash-head{ flex-direction:column; align-items:flex-start; }
+    .span2{ grid-column: span 1; }
   }
 </style>
 
-<div class="dash-head">
-  <div>
-    <h1 class="dash-title">Dashboard</h1>
-    <p class="dash-sub">
-      Bem-vindo, <strong><%= user?.name || "Usuário" %></strong>
-      • Perfil: <strong><%= user?.role || "USER" %></strong>
-    </p>
-  </div>
-
-  <div class="tag green">
-    ✅ Sistema V2 • Campo do Gado
-  </div>
-</div>
+<h1>Dashboard</h1>
+<p class="muted" style="margin-top:-6px;">
+  Bem-vindo, <strong><%= user?.nome || "Usuário" %></strong>.
+  Perfil: <strong><%= user?.role || user?.perfil || "USER" %></strong>
+</p>
 
 <div class="grid">
 
   <!-- OS -->
   <div class="card">
-    <div class="k">OS Abertas</div>
+    <div class="k">OS ABERTAS</div>
     <div class="v"><%= counters.os_abertas %></div>
-    <div class="row">
-      <a class="btn" href="/os?status=ABERTA">Ver OS</a>
+    <div class="row-actions">
+      <a class="btn" href="/os?status=ABERTA">Ver</a>
       <a class="btn primary" href="/os/new">Abrir OS</a>
     </div>
   </div>
 
   <div class="card">
-    <div class="k">OS em Andamento</div>
+    <div class="k">OS EM ANDAMENTO</div>
     <div class="v"><%= counters.os_andamento %></div>
-    <div class="row">
+    <div class="row-actions">
       <a class="btn" href="/os?status=ANDAMENTO">Acompanhar</a>
     </div>
   </div>
 
   <div class="card">
-    <div class="k">OS Concluídas</div>
+    <div class="k">OS CONCLUÍDAS</div>
     <div class="v"><%= counters.os_concluidas %></div>
-    <div class="row">
+    <div class="row-actions">
       <a class="btn" href="/os?status=CONCLUIDA">Histórico</a>
     </div>
   </div>
 
-  <!-- COMPRAS (solicitacoes + cotacoes) -->
+  <!-- COMPRAS -->
   <div class="card">
-    <div class="k">Solicitações de Compra</div>
-    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-      <span class="tag">Abertas: <strong><%= counters.solicitacoes_abertas %></strong></span>
-      <span class="tag">Em cotação: <strong><%= counters.solicitacoes_em_cotacao %></strong></span>
-      <span class="tag">Aprovadas: <strong><%= counters.solicitacoes_aprovadas %></strong></span>
-      <span class="tag green">Cotações: <strong><%= counters.cotacoes_total %></strong></span>
+    <div class="k">SOLICITAÇÕES ABERTAS</div>
+    <div class="v"><%= counters.solicitacoes_abertas %></div>
+    <div class="row-actions">
+      <a class="btn" href="/compras?status=ABERTA">Ver</a>
+      <a class="btn primary" href="/compras/new">Nova Solicitação</a>
     </div>
-    <div class="row">
-      <a class="btn" href="/compras">Ir para Compras</a>
-      <a class="btn" href="/solicitacoes">Solicitações</a>
+  </div>
+
+  <div class="card">
+    <div class="k">SOLICITAÇÕES EM COTAÇÃO</div>
+    <div class="v"><%= counters.solicitacoes_em_cotacao %></div>
+    <div class="row-actions">
+      <a class="btn" href="/compras?status=EM_COTACAO">Ver</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="k">SOLICITAÇÕES APROVADAS</div>
+    <div class="v"><%= counters.solicitacoes_aprovadas %></div>
+    <div class="row-actions">
+      <a class="btn" href="/compras?status=APROVADA">Ver</a>
     </div>
   </div>
 
   <!-- ESTOQUE -->
-  <div class="card">
-    <div class="k">Estoque</div>
-    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-      <span class="tag">Itens cadastrados: <strong><%= counters.estoque_itens %></strong></span>
-      <span class="tag">Qtd total: <strong><%= counters.estoque_total_qtd %></strong></span>
-      <span class="tag green">Valor total: <strong>R$ <%= Number(counters.estoque_total_valor || 0).toFixed(2).replace(".", ",") %></strong></span>
+  <div class="card span2">
+    <div class="k">ESTOQUE</div>
+    <div style="display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; margin-top:10px;">
+      <div>
+        <div class="muted" style="font-weight:900; font-size:12px;">Itens cadastrados</div>
+        <div style="font-size:28px; font-weight:900;"><%= counters.estoque_itens %></div>
+      </div>
+      <div>
+        <div class="muted" style="font-weight:900; font-size:12px;">Qtd total</div>
+        <div style="font-size:28px; font-weight:900;"><%= counters.estoque_total_qtd %></div>
+      </div>
+      <div>
+        <div class="muted" style="font-weight:900; font-size:12px;">Valor total (R$)</div>
+        <div style="font-size:28px; font-weight:900;">
+          <%= Number(counters.estoque_total_valor || 0).toFixed(2) %>
+        </div>
+      </div>
     </div>
-    <div class="row">
+
+    <div class="row-actions">
       <a class="btn" href="/estoque">Ver Estoque</a>
+      <a class="btn" href="/compras">Ir para Compras</a>
     </div>
   </div>
 
   <!-- ADMIN -->
   <div class="card">
-    <div class="k">Admin</div>
-
-    <% if ((user?.role) === "ADMIN") { %>
-      <div class="v" style="font-size:18px; margin-top:10px;">Acesso liberado</div>
-      <div class="row">
+    <div class="k">ADMIN</div>
+    <div style="margin-top:10px;">
+      <% if ((user?.role || user?.perfil) === "ADMIN") { %>
         <a class="btn" href="/admin/users">Usuários</a>
-      </div>
-    <% } else { %>
-      <div class="v" style="font-size:18px; margin-top:10px; color:#6b7280;">Somente leitura</div>
-      <div style="margin-top:8px; color:#6b7280; font-weight:800;">
-        Sem acesso ao gerenciamento de usuários.
-      </div>
-    <% } %>
+      <% } else { %>
+        <span class="muted">Sem acesso</span>
+      <% } %>
+    </div>
+    <div class="muted" style="font-size:12px; margin-top:10px;">
+      Cotações total: <strong><%= counters.cotacoes_total %></strong>
+    </div>
   </div>
 
 </div>
