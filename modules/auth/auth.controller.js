@@ -22,22 +22,15 @@ exports.doLogin = (req, res) => {
     return res.redirect("/login");
   }
 
-  if (!user.password_hash) {
-    req.flash("error", "Usuário sem senha cadastrada. Contate o administrador.");
-    return res.redirect("/login");
-  }
-
-  const ok = bcrypt.compareSync(password, user.password_hash);
+  const ok = bcrypt.compareSync(password, user.password_hash || "");
   if (!ok) {
     req.flash("error", "Senha inválida.");
     return res.redirect("/login");
   }
 
-  // ✅ SALVA NA SESSÃO (padronizado)
   req.session.user = {
     id: user.id,
-    nome: user.nome,       // pt-BR (padrão do sistema)
-    name: user.nome,       // compatibilidade
+    nome: user.nome || "Usuário",
     email: user.email,
     role: user.role || "USER",
   };
