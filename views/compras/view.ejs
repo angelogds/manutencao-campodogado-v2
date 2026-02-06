@@ -1,236 +1,67 @@
 <% layout('layout') %>
 
 <style>
-  .wrap{ max-width:1100px; }
-  .muted{ color:#6b7280; }
-  .grid{ display:grid; grid-template-columns: 1fr; gap:14px; }
+  .wrap{ max-width: 980px; margin: 0 auto; }
   .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
-  .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-  .fg{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
-  label{ font-size:12px; color:#6b7280; font-weight:900; letter-spacing:.06em;}
-  input, textarea, select{ border:1px solid #e5e7eb; border-radius:12px; padding:10px 12px; font-size:14px; outline:none; }
-  input:focus, textarea:focus, select:focus{ border-color:#0b6b3a; box-shadow:0 0 0 3px rgba(11,107,58,.12); }
-  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:10px;}
-  .btn{ height:40px; border-radius:12px; border:1px solid #e5e7eb; padding:0 12px; background:#fff; font-weight:900; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#111827;}
-  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff;}
-  .btn.warn{ background:#f59e0b; border-color:#f59e0b; color:#111827;}
-  .btn.danger{ background:#ef4444; border-color:#ef4444; color:#fff;}
-  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;}
-  .table th, .table td{ padding:10px 12px; border-bottom:1px solid #f3f4f6; font-size:14px;}
-  .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
-  .badge{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid #e5e7eb;}
-  .b-ABERTA{ background:rgba(11,107,58,.08); border-color:rgba(11,107,58,.25); color:#0b6b3a;}
-  .b-EM_COTACAO{ background:rgba(59,130,246,.10); border-color:rgba(59,130,246,.25); color:#1d4ed8;}
-  .b-APROVADA{ background:rgba(16,185,129,.10); border-color:rgba(16,185,129,.25); color:#047857;}
-  .b-COMPRADA{ background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.25); color:#92400e;}
-  .b-RECEBIDA{ background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.25); color:#166534;}
-  .b-CANCELADA{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:#991b1b;}
+  .row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .pill{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:900; font-size:12px; border:1px solid #e5e7eb; }
+  .pill.aberta{ background: rgba(11,107,58,.08); border-color: rgba(11,107,58,.25); color:#0b6b3a; }
+  .pill.outro{ background:#f3f4f6; color:#111827; }
+  .k{ color:#6b7280; font-weight:900; font-size:12px; letter-spacing:.02em; }
+  .v{ font-weight:800; }
+  .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
 </style>
 
 <div class="wrap">
-  <div class="toolbar">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
     <div>
       <h1 style="margin:0;">Solicitação #<%= solicitacao.id %></h1>
-      <div class="muted" style="margin-top:4px;">
-        <strong><%= solicitacao.titulo %></strong> • setor: <%= solicitacao.setor %> • prioridade: <%= solicitacao.prioridade %>
-        • criada em: <%= (solicitacao.created_at || "").replace("T"," ").slice(0,16) %>
-      </div>
+      <p style="margin:6px 0 0; color:#6b7280;">
+        <strong><%= solicitacao.titulo %></strong>
+      </p>
     </div>
 
-    <div>
-      <span class="badge b-<%= solicitacao.status %>"><%= solicitacao.status %></span>
-      <a class="btn" href="/compras" style="margin-left:10px;">Voltar</a>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <% const st = (solicitacao.status || "").toUpperCase(); %>
+      <% if (st === "ABERTA") { %>
+        <span class="pill aberta">ABERTA</span>
+      <% } else { %>
+        <span class="pill outro"><%= st || "STATUS" %></span>
+      <% } %>
+
+      <a class="btn" href="/compras">Voltar</a>
+      <a class="btn primary" href="/compras/new">+ Nova</a>
     </div>
   </div>
 
-  <div class="grid">
-
-    <!-- Status actions -->
-    <div class="card">
-      <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:900;">Fluxo</div>
-          <div class="muted" style="font-size:13px;">Controle de status (Compras/ADMIN)</div>
-        </div>
-
-        <form method="POST" action="/compras/<%= solicitacao.id %>/status" style="display:flex; gap:10px; align-items:center;">
-          <select name="status">
-            <option value="ABERTA" <%= solicitacao.status==="ABERTA" ? "selected":"" %>>ABERTA</option>
-            <option value="EM_COTACAO" <%= solicitacao.status==="EM_COTACAO" ? "selected":"" %>>EM_COTACAO</option>
-            <option value="APROVADA" <%= solicitacao.status==="APROVADA" ? "selected":"" %>>APROVADA</option>
-            <option value="COMPRADA" <%= solicitacao.status==="COMPRADA" ? "selected":"" %>>COMPRADA</option>
-            <option value="CANCELADA" <%= solicitacao.status==="CANCELADA" ? "selected":"" %>>CANCELADA</option>
-          </select>
-          <button class="btn" type="submit">Atualizar</button>
-        </form>
-
-        <form method="POST" action="/compras/<%= solicitacao.id %>/receber">
-          <button class="btn primary" type="submit">Marcar como RECEBIDA (entra no estoque)</button>
-        </form>
+  <div class="card" style="margin-top:14px;">
+    <div class="row">
+      <div style="min-width:220px;">
+        <div class="k">SETOR</div>
+        <div class="v"><%= solicitacao.setor %></div>
+      </div>
+      <div style="min-width:220px;">
+        <div class="k">PRIORIDADE</div>
+        <div class="v"><%= solicitacao.prioridade %></div>
+      </div>
+      <div style="min-width:260px;">
+        <div class="k">DATA</div>
+        <div class="v"><%= solicitacao.created_at %></div>
       </div>
     </div>
 
-    <!-- Descrição -->
-    <div class="card">
-      <div style="font-weight:900; margin-bottom:8px;">Descrição</div>
-      <div class="muted" style="white-space:pre-wrap;"><%= solicitacao.descricao %></div>
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
+
+    <div class="k">DESCRIÇÃO</div>
+    <div style="margin-top:8px; line-height:1.45;">
+      <%= solicitacao.descricao %>
     </div>
 
-    <!-- Itens da solicitação -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-          <div style="font-weight:900;">Itens da Solicitação</div>
-          <div class="muted" style="font-size:13px;">Esses itens entram no estoque quando marcar RECEBIDA.</div>
-        </div>
-      </div>
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
 
-      <form method="POST" action="/compras/<%= solicitacao.id %>/itens" class="row" style="margin-top:10px;">
-        <div class="fg">
-          <label>DESCRIÇÃO DO ITEM</label>
-          <input name="descricao" required placeholder="Ex: Correia B102" />
-        </div>
-        <div class="fg">
-          <label>UNIDADE</label>
-          <input name="unidade" placeholder="UN" />
-        </div>
-        <div class="fg">
-          <label>QUANTIDADE</label>
-          <input name="quantidade" required placeholder="Ex: 5" />
-        </div>
-        <div class="fg">
-          <label>OBSERVAÇÃO</label>
-          <input name="observacao" placeholder="opcional" />
-        </div>
-        <div style="display:flex; justify-content:flex-end; align-items:flex-end;">
-          <button class="btn primary" type="submit">+ Adicionar Item</button>
-        </div>
-      </form>
-
-      <div style="margin-top:12px;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>DESCRIÇÃO</th>
-              <th style="width:110px;">UN</th>
-              <th style="width:140px;">QTD</th>
-              <th>OBS</th>
-              <th style="width:120px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (!itens || itens.length === 0) { %>
-              <tr><td colspan="5" class="muted">Nenhum item adicionado.</td></tr>
-            <% } else { %>
-              <% itens.forEach((i) => { %>
-                <tr>
-                  <td><strong><%= i.descricao %></strong></td>
-                  <td><%= i.unidade %></td>
-                  <td><%= i.quantidade %></td>
-                  <td class="muted"><%= i.observacao || "" %></td>
-                  <td>
-                    <form method="POST" action="/compras/<%= solicitacao.id %>/itens/<%= i.id %>/delete">
-                      <button class="btn danger" type="submit">Remover</button>
-                    </form>
-                  </td>
-                </tr>
-              <% }) %>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
+    <div style="color:#6b7280; font-size:13px;">
+      Itens e quantidades: <strong>vamos adicionar na próxima etapa</strong>.
     </div>
-
-    <!-- Cotações -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-          <div style="font-weight:900;">Cotações</div>
-          <div class="muted" style="font-size:13px;">Compras/ADMIN podem criar cotações e itens da cotação.</div>
-        </div>
-      </div>
-
-      <form method="POST" action="/compras/<%= solicitacao.id %>/cotacoes" class="row" style="margin-top:10px;">
-        <div class="fg">
-          <label>FORNECEDOR</label>
-          <input name="fornecedor" required placeholder="Ex: Casa das Correias" />
-        </div>
-        <div class="fg">
-          <label>PRAZO (DIAS)</label>
-          <input name="prazo_dias" placeholder="0" />
-        </div>
-        <div style="display:flex; justify-content:flex-end; align-items:flex-end;">
-          <button class="btn primary" type="submit">+ Criar Cotação</button>
-        </div>
-      </form>
-
-      <% if (!cotacoes || cotacoes.length === 0) { %>
-        <div class="muted" style="margin-top:12px;">Nenhuma cotação registrada.</div>
-      <% } else { %>
-        <% cotacoes.forEach((c) => { %>
-          <div style="margin-top:16px; padding:12px; border:1px solid #e5e7eb; border-radius:14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div>
-                <div style="font-weight:900;">Cotação #<%= c.id %> • <%= c.fornecedor %></div>
-                <div class="muted" style="font-size:13px;">
-                  Prazo: <%= c.prazo_dias %> dia(s) • Total: R$ <%= (c.total || 0).toFixed ? (c.total || 0).toFixed(2) : c.total %>
-                </div>
-              </div>
-            </div>
-
-            <form method="POST" action="/compras/cotacoes/<%= c.id %>/itens" class="row" style="margin-top:10px;">
-              <input type="hidden" name="solicitacao_id" value="<%= solicitacao.id %>" />
-              <div class="fg">
-                <label>DESCRIÇÃO</label>
-                <input name="descricao" required placeholder="Ex: Correia B102" />
-              </div>
-              <div class="fg">
-                <label>UNIDADE</label>
-                <input name="unidade" placeholder="UN" />
-              </div>
-              <div class="fg">
-                <label>QTD</label>
-                <input name="quantidade" required placeholder="1" />
-              </div>
-              <div class="fg">
-                <label>VALOR UNIT (R$)</label>
-                <input name="valor_unitario" placeholder="0" />
-              </div>
-              <div style="display:flex; justify-content:flex-end; align-items:flex-end;">
-                <button class="btn" type="submit">Adicionar item na cotação</button>
-              </div>
-            </form>
-
-            <table class="table" style="margin-top:10px;">
-              <thead>
-                <tr>
-                  <th>ITEM</th>
-                  <th style="width:90px;">UN</th>
-                  <th style="width:110px;">QTD</th>
-                  <th style="width:150px;">V. UNIT</th>
-                  <th style="width:150px;">SUBTOTAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (!c.itens || c.itens.length === 0) { %>
-                  <tr><td colspan="5" class="muted">Nenhum item nessa cotação.</td></tr>
-                <% } else { %>
-                  <% c.itens.forEach((ci) => { %>
-                    <tr>
-                      <td><strong><%= ci.descricao %></strong></td>
-                      <td><%= ci.unidade %></td>
-                      <td><%= ci.quantidade %></td>
-                      <td class="muted">R$ <%= Number(ci.valor_unitario || 0).toFixed(2) %></td>
-                      <td class="muted">R$ <%= Number(ci.subtotal || 0).toFixed(2) %></td>
-                    </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        <% }) %>
-      <% } %>
-    </div>
-
   </div>
 </div>
