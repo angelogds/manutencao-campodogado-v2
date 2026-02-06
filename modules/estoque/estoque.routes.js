@@ -2,19 +2,17 @@ const express = require("express");
 const router = express.Router();
 
 const { requireLogin, requireRole } = require("../auth/auth.middleware");
-const { ROLES } = require("../../utils/security/permissions");
+const controller = require("./estoque.controller"); // ✅ FALTAVA ISSO
 
-router.get(
-  "/estoque",
-  requireLogin,
-  requireRole([ROLES.ADMIN, ROLES.COMPRAS, ROLES.DIRECAO]),
-  (req, res) => res.render("estoque/index", { title: "Estoque" })
-);
-
+// Estoque (visão geral)
 router.get("/estoque", requireLogin, controller.index);
-router.get("/estoque/:id", requireLogin, controller.viewItem);
-router.get("/estoque/:id/mov", requireLogin, controller.movForm);
-router.post("/estoque/:id/mov", requireLogin, controller.movPost);
+
+// Itens
+router.get("/estoque/itens/new", requireLogin, requireRole(["ADMIN", "COMPRAS"]), controller.newItemForm);
+router.post("/estoque/itens", requireLogin, requireRole(["ADMIN", "COMPRAS"]), controller.createItem);
+
+// Movimentações (ENTRADA/SAÍDA/AJUSTE)
+router.get("/estoque/mov/new", requireLogin, requireRole(["ADMIN", "COMPRAS", "MANUTENCAO"]), controller.newMovForm);
+router.post("/estoque/mov", requireLogin, requireRole(["ADMIN", "COMPRAS", "MANUTENCAO"]), controller.createMov);
 
 module.exports = router;
-
