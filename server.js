@@ -2,6 +2,8 @@
 require("dotenv").config();
 require("./database/migrate");
 
+const { ensureAdmin } = require("./database/seed");
+ensureAdmin();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
@@ -118,4 +120,5 @@ app.get("/health", (_req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Servidor ativo na porta ${port}`));
+
 
