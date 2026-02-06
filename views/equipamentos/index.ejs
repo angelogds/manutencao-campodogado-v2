@@ -1,0 +1,93 @@
+<% layout('layout') %>
+
+<style>
+  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin:10px 0 14px; flex-wrap:wrap;}
+  .sel, .inp, .btn{ height:40px; border-radius:12px; border:1px solid #e5e7eb; padding:0 12px; background:#fff; font-weight:800; }
+  .inp{ min-width:240px; font-weight:700; }
+  .btn{ cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#111827;}
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff;}
+  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;}
+  .table th, .table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px; vertical-align:middle;}
+  .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
+  .muted{ color:#6b7280; }
+  .pill{ display:inline-flex; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid #e5e7eb;}
+  .pill.ok{ background:rgba(11,107,58,.08); border-color:rgba(11,107,58,.25); color:#0b6b3a;}
+  .pill.off{ background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.25); color:#991b1b;}
+</style>
+
+<h1>Equipamentos</h1>
+<p class="muted" style="margin-top:-6px;">
+  Cadastre os equipamentos para selecionar na abertura de OS.
+</p>
+
+<div class="toolbar">
+  <form method="GET" action="/equipamentos" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <input class="inp" name="q" value="<%= q %>" placeholder="Buscar por nome ou código..." />
+    <select class="sel" name="setor">
+      <option value="TODOS" <%= setor==="TODOS" ? "selected" : "" %>>Todos os setores</option>
+      <option value="DIGESTORES" <%= setor==="DIGESTORES" ? "selected" : "" %>>Digestores</option>
+      <option value="CALDEIRAS" <%= setor==="CALDEIRAS" ? "selected" : "" %>>Caldeiras</option>
+      <option value="PRENSAS" <%= setor==="PRENSAS" ? "selected" : "" %>>Prensas</option>
+      <option value="MOAGEM" <%= setor==="MOAGEM" ? "selected" : "" %>>Moagem</option>
+      <option value="UTILIDADES" <%= setor==="UTILIDADES" ? "selected" : "" %>>Utilidades</option>
+    </select>
+
+    <select class="sel" name="status">
+      <option value="TODOS" <%= status==="TODOS" ? "selected" : "" %>>Todos</option>
+      <option value="ATIVO" <%= status==="ATIVO" ? "selected" : "" %>>Ativo</option>
+      <option value="INATIVO" <%= status==="INATIVO" ? "selected" : "" %>>Inativo</option>
+    </select>
+
+    <button class="btn" type="submit">Filtrar</button>
+  </form>
+
+  <% const role = user?.role || user?.perfil; %>
+  <% if (role === "ADMIN" || role === "MANUTENCAO") { %>
+    <a class="btn primary" href="/equipamentos/new">+ Novo Equipamento</a>
+  <% } %>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width:90px;">ID</th>
+      <th>NOME</th>
+      <th style="width:140px;">CÓDIGO</th>
+      <th style="width:170px;">SETOR</th>
+      <th style="width:170px;">LOCAL</th>
+      <th style="width:120px;">STATUS</th>
+      <th style="width:170px;">CRIADO</th>
+      <th style="width:120px;">AÇÕES</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (!itens || itens.length === 0) { %>
+      <tr><td colspan="8" class="muted">Nenhum equipamento encontrado.</td></tr>
+    <% } else { %>
+      <% itens.forEach((e) => { %>
+        <tr>
+          <td>#<%= e.id %></td>
+          <td style="font-weight:900;"><%= e.nome %></td>
+          <td class="muted"><%= e.codigo || "-" %></td>
+          <td><%= e.setor %></td>
+          <td class="muted"><%= e.localizacao || "-" %></td>
+          <td>
+            <% if (e.status === "ATIVO") { %>
+              <span class="pill ok">ATIVO</span>
+            <% } else { %>
+              <span class="pill off">INATIVO</span>
+            <% } %>
+          </td>
+          <td class="muted"><%= fmtBR(e.created_at) %></td>
+          <td>
+            <% if (role === "ADMIN" || role === "MANUTENCAO") { %>
+              <a class="btn" style="height:34px;border-radius:10px;" href="/equipamentos/<%= e.id %>/edit">Editar</a>
+            <% } else { %>
+              <span class="muted">—</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    <% } %>
+  </tbody>
+</table>
