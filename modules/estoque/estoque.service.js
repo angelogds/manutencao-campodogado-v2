@@ -1,119 +1,97 @@
 const db = require("../../database/db");
 
-// Lista itens do estoque
+// tenta suportar nomes diferentes de tabela, sem quebrar
+function tableExists(name) {
+  const row = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
+    .get(name);
+  return !!row;
+}
+
+function resolveItensTable() {
+  if (tableExists("estoque_itens")) return "estoque_itens";
+  if (tableExists("estoque")) return "estoque";
+  // fallback: cria uma lista vazia sem explodir
+  return null;
+}
+
 exports.listItens = () => {
-  return db
-    .prepare(
-      `
-    SELECT id, descricao, unidade, quantidade, valor_unitario, atualizado_em
+  const t = resolveItensTable();
+  if (!t) return [];
+
+  // campos mínimos esperados (id, nome, unidade, saldo)
+  // se seu schema for diferente, me manda que eu ajusto 1x e pronto.
+  if (t === "estoque_itens") {
+    return db.prepare(`
+      SELECT id, nome, unidade, COALESCE(saldo, 0) AS saldo, COALESCE(estoque_min, 0) AS estoque_min
+      FROM estoque_itens
+      ORDER BY nome ASC
+    `).all();
+  }
+
+  // tabela "estoque" genérica
+  return db.prepare(`
+    SELECT id, nome, unidade, COALESCE(saldo, 0) AS saldo
     FROM estoque
-    ORDER BY descricao ASC
-  `
-    )
-    .all();
+    ORDER BY nome ASC
+  `).all();
 };
 
-// Busca item por id
-exports.getItemById = (id) => {
-  return db
-    .prepare(
-      `
-    SELECT id, descricao, unidade, quantidade, valor_unitario, atualizado_em
-    FROM estoque
-    WHERE id = ?
-  `
-    )
-    .get(id);
+exports.createItem = ({ nome, unidade, estoque_min, created_by }) => {
+  const t = resolveItensTable();
+  if (!t) throw new Error("Tabela de itens de estoque não encontrada (estoque_itens/estoque).");
+
+  if (t === "estoque_itens") {
+    return db.prepare(`
+      INSERT INTO estoque_itens (nome, unidade, estoque_min, saldo, created_by, created_at)
+      VALUES (?, ?, ?, 0, ?, datetime('now'))
+    `).run(nome, unidade, estoque_min || 0, created_by);
+  }
+
+  return db.prepare(`
+    INSERT INTO estoque (nome, unidade, saldo)
+    VALUES (?, ?, 0)
+  `).run(nome, unidade);
 };
 
-// ✅ Registra movimentação + atualiza saldo do item (transação)
-exports.movimentar = ({
-  item_id,
-  tipo,
-  quantidade,
-  origem,
-  observacao,
-  created_by,
-  owner_type,
-  owner_id,
-}) => {
-  const item = exports.getItemById(item_id);
-  if (!item) throw new Error("Item de estoque não encontrado.");
+exports.listMovsRecentes = () => {
+  if (!tableExists("estoque_mov")) return [];
 
-  const q = Number(quantidade);
-  if (!q || q <= 0) throw new Error("Quantidade inválida.");
-
-  const upper = String(tipo || "").toUpperCase();
-  if (!["ENTRADA", "SAIDA", "AJUSTE"].includes(upper)) {
-    throw new Error("Tipo inválido. Use ENTRADA, SAIDA ou AJUSTE.");
-  }
-
-  // Calcula novo saldo
-  let novoSaldo = Number(item.quantidade || 0);
-
-  if (upper === "ENTRADA") novoSaldo += q;
-  if (upper === "SAIDA") {
-    if (novoSaldo < q) throw new Error("Saldo insuficiente para saída.");
-    novoSaldo -= q;
-  }
-  if (upper === "AJUSTE") {
-    // AJUSTE = soma positiva (ex: corrigir inventário)
-    novoSaldo += q;
-  }
-
-  const tx = db.transaction(() => {
-    // 1) grava movimentação
-    const mov = db
-      .prepare(
-        `
-      INSERT INTO estoque_mov (
-        item_id, tipo, quantidade, origem, observacao,
-        created_by, created_at, owner_type, owner_id
-      )
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)
-    `
-      )
-      .run(
-        item_id,
-        upper,
-        q,
-        origem || null,
-        observacao || null,
-        created_by || null,
-        owner_type || null,
-        owner_id || null
-      );
-
-    // 2) atualiza saldo do item
-    db.prepare(
-      `
-      UPDATE estoque
-      SET quantidade = ?,
-          atualizado_em = datetime('now')
-      WHERE id = ?
-    `
-    ).run(novoSaldo, item_id);
-
-    return mov.lastInsertRowid;
-  });
-
-  return tx();
+  return db.prepare(`
+    SELECT id, item_id, tipo, quantidade, origem, created_at
+    FROM estoque_mov
+    ORDER BY id DESC
+    LIMIT 20
+  `).all();
 };
 
-// Histórico por item
-exports.listMovimentosByItem = (item_id) => {
-  return db
-    .prepare(
-      `
-    SELECT
-      m.id, m.tipo, m.quantidade, m.origem, m.observacao,
-      m.created_at, u.name as created_by_name
-    FROM estoque_mov m
-    LEFT JOIN users u ON u.id = m.created_by
-    WHERE m.item_id = ?
-    ORDER BY m.id DESC
-    LIMIT 200
-  `
-    )
-    .all(item_id);
+exports.createMov = ({ item_id, tipo, quantidade, origem, created_by }) => {
+  if (!tableExists("estoque_mov")) {
+    throw new Error("Tabela estoque_mov não existe. Verifique a migration 055_integracao_estoque.sql.");
+  }
+
+  const valid = ["ENTRADA", "SAIDA", "AJUSTE"];
+  if (!valid.includes(tipo)) throw new Error("Tipo inválido (ENTRADA|SAIDA|AJUSTE).");
+  if (!Number.isFinite(quantidade) || quantidade <= 0) throw new Error("Quantidade inválida.");
+
+  // registra movimento
+  db.prepare(`
+    INSERT INTO estoque_mov (item_id, tipo, quantidade, origem, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, datetime('now'))
+  `).run(item_id, tipo, quantidade, origem, created_by);
+
+  // atualiza saldo (se existir coluna saldo)
+  const itensTable = resolveItensTable();
+  if (!itensTable) return;
+
+  // saldo ajustado
+  let delta = quantidade;
+  if (tipo === "SAIDA") delta = -quantidade;
+  if (tipo === "AJUSTE") {
+    // AJUSTE: define saldo = quantidade
+    db.prepare(`UPDATE ${itensTable} SET saldo=? WHERE id=?`).run(quantidade, item_id);
+    return;
+  }
+
+  db.prepare(`UPDATE ${itensTable} SET saldo = COALESCE(saldo,0) + ? WHERE id=?`).run(delta, item_id);
 };
