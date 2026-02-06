@@ -1,34 +1,29 @@
 const db = require("../../database/db");
 
-function tableExists(name) {
-  const row = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
-    .get(name);
-  return !!row;
-}
-
-exports.list = () => {
-  if (!tableExists("solicitacoes")) return [];
-
-  return db.prepare(`
-    SELECT
-      id,
-      titulo,
-      setor,
-      prioridade,
-      status,
-      created_at
-    FROM solicitacoes
-    ORDER BY id DESC
-  `).all();
+// lista solicitações
+exports.listSolicitacoes = ({ status }) => {
+  return db
+    .prepare(
+      `
+      SELECT id, titulo, setor, prioridade, status, created_at
+      FROM solicitacoes
+      WHERE status = ?
+      ORDER BY id DESC
+    `
+    )
+    .all(status);
 };
 
-exports.create = ({ titulo, descricao, setor, prioridade, created_by }) => {
-  if (!tableExists("solicitacoes")) return;
+// cria solicitação
+exports.createSolicitacao = ({ titulo, descricao, setor, prioridade, created_by }) => {
+  const res = db
+    .prepare(
+      `
+      INSERT INTO solicitacoes (titulo, descricao, setor, prioridade, status, created_by, created_at)
+      VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now'))
+    `
+    )
+    .run(titulo, descricao, setor, prioridade, created_by);
 
-  db.prepare(`
-    INSERT INTO solicitacoes
-    (titulo, descricao, setor, prioridade, status, created_by, created_at)
-    VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now'))
-  `).run(titulo, descricao, setor, prioridade, created_by);
+  return res.lastInsertRowid;
 };
