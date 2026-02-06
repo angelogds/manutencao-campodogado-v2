@@ -10,11 +10,10 @@ CREATE TABLE IF NOT EXISTS estoque (
   unidade TEXT NOT NULL DEFAULT 'UN',
   quantidade REAL NOT NULL DEFAULT 0,
   valor_unitario REAL NOT NULL DEFAULT 0,
-  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now','-3 hours'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_estoque_desc ON estoque(descricao);
-
 
 -- =========================
 -- SOLICITAÇÕES (Manutenção -> Compras)
@@ -35,7 +34,6 @@ CREATE INDEX IF NOT EXISTS idx_solicitacoes_status ON solicitacoes(status);
 CREATE INDEX IF NOT EXISTS idx_solicitacoes_setor ON solicitacoes(setor);
 CREATE INDEX IF NOT EXISTS idx_solicitacoes_created_at ON solicitacoes(created_at);
 
-
 -- Itens da solicitação
 CREATE TABLE IF NOT EXISTS solicitacao_itens (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +47,6 @@ CREATE TABLE IF NOT EXISTS solicitacao_itens (
 
 CREATE INDEX IF NOT EXISTS idx_solic_itens_sol ON solicitacao_itens(solicitacao_id);
 
-
 -- =========================
 -- COTAÇÕES (Compras)
 -- =========================
@@ -60,14 +57,13 @@ CREATE TABLE IF NOT EXISTS cotacoes (
   prazo_dias INTEGER NOT NULL DEFAULT 0,
   total REAL NOT NULL DEFAULT 0,
   created_by INTEGER,
-created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now','-3 hours')),
   FOREIGN KEY (solicitacao_id) REFERENCES solicitacoes(id) ON DELETE CASCADE,
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_cotacoes_sol ON cotacoes(solicitacao_id);
 CREATE INDEX IF NOT EXISTS idx_cotacoes_created_at ON cotacoes(created_at);
-
 
 -- Itens da cotação
 CREATE TABLE IF NOT EXISTS cotacao_itens (
@@ -82,5 +78,3 @@ CREATE TABLE IF NOT EXISTS cotacao_itens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cot_itens_cot ON cotacao_itens(cotacao_id);
-
-
