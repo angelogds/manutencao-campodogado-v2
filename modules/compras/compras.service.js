@@ -18,6 +18,7 @@ exports.listSolicitacoes = ({ status = "TODOS" } = {}) => {
     params.push(status);
   }
 
+  // compat: users pode ter "nome" ou "name"
   const userNameCol = hasColumn("users", "nome")
     ? "u.nome"
     : hasColumn("users", "name")
@@ -46,9 +47,9 @@ exports.createSolicitacao = ({ titulo, setor, prioridade, descricao, created_by 
   const info = stmt.run(
     String(titulo || "").trim(),
     String(setor || "").trim(),
-    String(prioridade || "NORMAL").trim(),
+    String(prioridade || "NORMAL").trim().toUpperCase(),
     String(descricao || "").trim(),
-    created_by
+    created_by || null
   );
 
   return Number(info.lastInsertRowid);
@@ -58,40 +59,38 @@ exports.getSolicitacao = (id) => {
   return db.prepare(`SELECT * FROM solicitacoes WHERE id = ?`).get(id);
 };
 
-// ======================
+// =========================
 // ITENS DA SOLICITAÇÃO
-// material = descricao
-// especificacao = observacao
-// ======================
-exports.listItensDaSolicitacao = (solicitacaoId) => {
+// =========================
+exports.listItensBySolicitacao = (solicitacao_id) => {
   return db.prepare(`
-    SELECT id, solicitacao_id, descricao, observacao, unidade, quantidade
+    SELECT id, solicitacao_id, descricao, unidade, quantidade, observacao
     FROM solicitacao_itens
     WHERE solicitacao_id = ?
-    ORDER BY id DESC
-  `).all(solicitacaoId);
+    ORDER BY id ASC
+  `).all(solicitacao_id);
 };
 
-exports.addItemSolicitacao = ({ solicitacao_id, material, especificacao, quantidade, unidade = "UN" }) => {
-  const stmt = db.prepare(`
-    INSERT INTO solicitacao_itens (solicitacao_id, descricao, observacao, unidade, quantidade)
-    VALUES (?, ?, ?, ?, ?)
-  `);
+exports.addItemSolicitacao = ({ solicitacao_id, descricao, unidade, quantidade, observacao }) => {
+  const q = Number(quantidade || 0);
+  if (!solicitacao_id) throw new Error("Solicitação inválida.");
+  if (!String(descricao || "").trim()) throw new Error("Informe o material/especificação.");
+  if (!(q > 0)) throw new Error("Quantidade inválida.");
 
-  const info = stmt.run(
-    Number(solicitacao_id),
-    String(material || "").trim(),
-    String(especificacao || "").trim(),
-    String(unidade || "UN").trim(),
-    Number(quantidade)
+  const info = db.prepare(`
+    INSERT INTO solicitacao_itens (solicitacao_id, descricao, unidade, quantidade, observacao)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    solicitacao_id,
+    String(descricao).trim(),
+    String(unidade || "UN").trim().toUpperCase(),
+    q,
+    String(observacao || "").trim() || null
   );
 
   return Number(info.lastInsertRowid);
 };
 
-exports.removeItemSolicitacao = ({ itemId, solicitacaoId }) => {
-  db.prepare(`
-    DELETE FROM solicitacao_itens
-    WHERE id = ? AND solicitacao_id = ?
-  `).run(Number(itemId), Number(solicitacaoId));
+exports.deleteItem = (id) => {
+  db.prepare(`DELETE FROM solicitacao_itens WHERE id = ?`).run(id);
 };
