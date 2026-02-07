@@ -1,7 +1,7 @@
 <% layout('layout') %>
 
 <style>
-  .wrap{ max-width: 980px; margin: 0 auto; }
+  .wrap{ max-width: 1100px; margin: 0 auto; }
   .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
   .row{ display:flex; gap:14px; flex-wrap:wrap; }
   .pill{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:900; font-size:12px; border:1px solid #e5e7eb; }
@@ -11,25 +11,22 @@
   .v{ font-weight:800; }
   .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
   .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
-
-  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; margin-top:12px;}
+  .btn.danger{ background:#fff; border-color:rgba(220,38,38,.35); color:#b91c1c; }
+  .grid{ display:grid; grid-template-columns: 1.2fr 1.8fr .6fr .5fr; gap:10px; }
+  input,select{ padding:10px 12px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; outline:none; }
+  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; margin-top:14px; }
   .table th, .table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px; vertical-align:middle;}
   .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
   .muted{ color:#6b7280; }
 </style>
 
+<% const itensSafe = (typeof itens !== "undefined" && itens) ? itens : []; %>
+
 <div class="wrap">
   <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
     <div>
       <h1 style="margin:0;">Solicitação #<%= solicitacao.id %></h1>
-      <p style="margin:6px 0 0; color:#6b7280;">
-        <strong><%= solicitacao.titulo %></strong>
-      </p>
-      <% if (solicitacao.criado_por) { %>
-        <div class="muted" style="font-size:12px; margin-top:6px;">
-          Criada por <strong><%= solicitacao.criado_por %></strong>
-        </div>
-      <% } %>
+      <p style="margin:6px 0 0; color:#6b7280;"><strong><%= solicitacao.titulo %></strong></p>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center;">
@@ -64,43 +61,87 @@
     <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
 
     <div class="k">DESCRIÇÃO</div>
-    <div style="margin-top:8px; line-height:1.45;">
-      <%= solicitacao.descricao %>
+    <div style="margin-top:8px; line-height:1.45;"><%= solicitacao.descricao %></div>
+  </div>
+
+  <!-- ADD ITEM -->
+  <div class="card" style="margin-top:14px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:1000;">Adicionar item</div>
+        <div class="muted" style="font-size:13px;">Material + especificação + quantidade</div>
+      </div>
     </div>
 
-    <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
+    <form method="POST" action="/compras/<%= solicitacao.id %>/itens" style="margin-top:12px;">
+      <div class="grid">
+        <div>
+          <div class="k" style="margin-bottom:6px;">MATERIAL</div>
+          <input name="material" placeholder="Ex: Disco de corte" required />
+        </div>
 
-    <div class="k">ITENS (SOLICITAÇÃO DE MATERIAL)</div>
+        <div>
+          <div class="k" style="margin-bottom:6px;">ESPECIFICAÇÃO</div>
+          <input name="especificacao" placeholder='Ex: 7" / inox / marca...' />
+        </div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th style="width:80px;">#</th>
-          <th>DESCRIÇÃO</th>
-          <th style="width:110px;">UN</th>
-          <th style="width:140px;">QTD</th>
-          <th style="width:260px;">OBS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (!itens || itens.length === 0) { %>
-          <tr><td colspan="5" class="muted">Nenhum item adicionado ainda.</td></tr>
-        <% } else { %>
-          <% itens.forEach((it) => { %>
-            <tr>
-              <td class="muted">#<%= it.id %></td>
-              <td><strong><%= it.descricao %></strong></td>
-              <td class="muted"><%= it.unidade %></td>
-              <td><%= it.quantidade %></td>
-              <td class="muted"><%= it.observacao || "" %></td>
-            </tr>
-          <% }) %>
-        <% } %>
-      </tbody>
-    </table>
+        <div>
+          <div class="k" style="margin-bottom:6px;">QTD</div>
+          <input name="quantidade" type="number" step="0.01" min="0.01" placeholder="1" required />
+        </div>
 
-    <div class="muted" style="margin-top:10px; font-size:13px;">
-      Próximo passo: botão “Adicionar Item” (quantidade/unidade/obs) direto nesta tela.
-    </div>
+        <div>
+          <div class="k" style="margin-bottom:6px;">UN</div>
+          <select name="unidade">
+            <option value="UN">UN</option>
+            <option value="CX">CX</option>
+            <option value="KG">KG</option>
+            <option value="MT">MT</option>
+            <option value="LT">LT</option>
+            <option value="PC">PC</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn primary" type="submit">Adicionar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TABLE ITENS -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:90px;">ID</th>
+        <th>MATERIAL</th>
+        <th>ESPECIFICAÇÃO</th>
+        <th style="width:140px;">QTD</th>
+        <th style="width:120px;">AÇÕES</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (!itensSafe || itensSafe.length === 0) { %>
+        <tr><td colspan="5" class="muted">Nenhum item adicionado ainda.</td></tr>
+      <% } else { %>
+        <% itensSafe.forEach((it) => { %>
+          <tr>
+            <td>#<%= it.id %></td>
+            <td><%= it.descricao %></td>
+            <td class="muted"><%= it.observacao || "-" %></td>
+            <td><strong><%= it.quantidade %></strong> <span class="muted"><%= it.unidade %></span></td>
+            <td>
+              <form method="POST" action="/compras/<%= solicitacao.id %>/itens/<%= it.id %>/delete" style="display:inline;">
+                <button class="btn danger" type="submit">Remover</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+
+  <div class="muted" style="margin-top:10px; font-size:13px;">
+    Dica: agora você consegue lançar “1 caixa de disco 7” (UN=CX, QTD=1), “eletrodo 718” (CX), “válvula esférica 2” (UN=UN) etc.
   </div>
 </div>
