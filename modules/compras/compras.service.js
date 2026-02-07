@@ -54,48 +54,44 @@ exports.createSolicitacao = ({ titulo, setor, prioridade, descricao, created_by 
   return Number(info.lastInsertRowid);
 };
 
-// ✅ agora traz também criado_por
 exports.getSolicitacao = (id) => {
-  const userNameCol = hasColumn("users", "nome")
-    ? "u.nome"
-    : hasColumn("users", "name")
-    ? "u.name"
-    : "NULL";
-
-  return db.prepare(`
-    SELECT
-      s.*,
-      ${userNameCol} AS criado_por
-    FROM solicitacoes s
-    LEFT JOIN users u ON u.id = s.created_by
-    WHERE s.id = ?
-    LIMIT 1
-  `).get(id);
+  return db.prepare(`SELECT * FROM solicitacoes WHERE id = ?`).get(id);
 };
 
-// ✅ itens da solicitação (para “solicitação de material completa”)
-exports.listItensDaSolicitacao = (solicitacao_id) => {
+// ======================
+// ITENS DA SOLICITAÇÃO
+// material = descricao
+// especificacao = observacao
+// ======================
+exports.listItensDaSolicitacao = (solicitacaoId) => {
   return db.prepare(`
-    SELECT id, descricao, unidade, quantidade, observacao
+    SELECT id, solicitacao_id, descricao, observacao, unidade, quantidade
     FROM solicitacao_itens
     WHERE solicitacao_id = ?
-    ORDER BY id ASC
-  `).all(solicitacao_id);
+    ORDER BY id DESC
+  `).all(solicitacaoId);
 };
 
-// ✅ inserir item (vamos usar no próximo passo)
-exports.addItem = ({ solicitacao_id, descricao, unidade = "UN", quantidade, observacao }) => {
-  const info = db.prepare(`
-    INSERT INTO solicitacao_itens (solicitacao_id, descricao, unidade, quantidade, observacao)
+exports.addItemSolicitacao = ({ solicitacao_id, material, especificacao, quantidade, unidade = "UN" }) => {
+  const stmt = db.prepare(`
+    INSERT INTO solicitacao_itens (solicitacao_id, descricao, observacao, unidade, quantidade)
     VALUES (?, ?, ?, ?, ?)
-  `).run(
-    solicitacao_id,
-    String(descricao || "").trim(),
-    String(unidade || "UN").trim().toUpperCase(),
-    Number(quantidade || 0),
-    observacao ? String(observacao).trim() : null
+  `);
+
+  const info = stmt.run(
+    Number(solicitacao_id),
+    String(material || "").trim(),
+    String(especificacao || "").trim(),
+    String(unidade || "UN").trim(),
+    Number(quantidade)
   );
 
   return Number(info.lastInsertRowid);
 };
 
+exports.removeItemSolicitacao = ({ itemId, solicitacaoId }) => {
+  db.prepare(`
+    DELETE FROM solicitacao_itens
+    WHERE id = ? AND solicitacao_id = ?
+  `).run(Number(itemId), Number(solicitacaoId));
+};
