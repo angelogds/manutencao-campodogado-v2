@@ -1,8 +1,15 @@
 // modules/os/os.controller.js
 const service = require("./os.service");
-
-// ✅ pega equipamentos para o select da OS
 const equipamentosService = require("../equipamentos/equipamentos.service");
+
+// helper: monta texto padrão do equipamento (para preencher os.equipamento NOT NULL)
+function buildEquipamentoLabel(e) {
+  if (!e) return "";
+  const setor = e.setor ? `[${e.setor}] ` : "";
+  const codigo = e.codigo ? ` - ${e.codigo}` : "";
+  const nome = e.nome || e.descricao || "";
+  return `${setor}${nome}${codigo}`.trim();
+}
 
 exports.list = (req, res) => {
   const status = (req.query.status || "ABERTA").toUpperCase();
@@ -25,24 +32,48 @@ exports.newForm = (req, res) => {
 };
 
 exports.create = (req, res) => {
-  // ✅ novo padrão: equipamento_id vindo do <select>
-  // ✅ compat: se ainda vier "equipamento" texto (de um form antigo), não explode
   const { equipamento_id, equipamento, descricao, tipo } = req.body;
 
   const equipIdNum = equipamento_id ? Number(equipamento_id) : null;
-  const tipoUp = (tipo || "CORRETIVA").toUpperCase();
 
-  if ((!equipIdNum && !equipamento) || !descricao) {
+  if ((!equipIdNum && !String(equipamento || "").trim()) || !String(descricao || "").trim()) {
     req.flash("error", "Selecione o equipamento e preencha a descrição.");
     return res.redirect("/os/new");
   }
 
   try {
+    // 1) Se veio equipamento_id, buscamos na base e montamos o texto padrão
+    let equipamentoTxt = String(equipamento || "").trim();
+
+    if (equipIdNum) {
+      // tenta achar por métodos comuns (sem quebrar caso seu service tenha outro nome)
+      let eq = null;
+
+      if (typeof equipamentosService.getById === "function") {
+        eq = equipamentosService.getById(equipIdNum);
+      } else if (typeof equipamentosService.getEquipamentoById === "function") {
+        eq = equipamentosService.getEquipamentoById(equipIdNum);
+      } else if (typeof equipamentosService.findById === "function") {
+        eq = equipamentosService.findById(equipIdNum);
+      } else if (typeof equipamentosService.listAtivos === "function") {
+        // fallback: procura dentro da lista
+        eq = (equipamentosService.listAtivos() || []).find((x) => Number(x.id) === equipIdNum) || null;
+      }
+
+      if (!eq) {
+        req.flash("error", "Equipamento selecionado não encontrado.");
+        return res.redirect("/os/new");
+      }
+
+      equipamentoTxt = buildEquipamentoLabel(eq);
+    }
+
+    // 2) Cria OS garantindo equipamento (texto) NOT NULL
     const id = service.createOS({
-      equipamento_id: equipIdNum,
-      equipamento: equipamento ? String(equipamento).trim() : null, // compat
-      descricao: String(descricao).trim(),
-      tipo: tipoUp,
+      equipamento_id: equipIdNum || null,
+      equipamento: equipamentoTxt, // ✅ garante NOT NULL
+      descricao: String(descricao || "").trim(),
+      tipo: String(tipo || "CORRETIVA").toUpperCase(),
       opened_by: req.session.user.id,
     });
 
