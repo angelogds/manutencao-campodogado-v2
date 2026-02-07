@@ -1,4 +1,3 @@
-
 <% layout('layout') %>
 
 <style>
@@ -12,6 +11,11 @@
   .v{ font-weight:800; }
   .btn{ display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; text-decoration:none; font-weight:900; color:#111827; }
   .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
+
+  .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; margin-top:12px;}
+  .table th, .table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px; vertical-align:middle;}
+  .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
+  .muted{ color:#6b7280; }
 </style>
 
 <div class="wrap">
@@ -21,6 +25,11 @@
       <p style="margin:6px 0 0; color:#6b7280;">
         <strong><%= solicitacao.titulo %></strong>
       </p>
+      <% if (solicitacao.criado_por) { %>
+        <div class="muted" style="font-size:12px; margin-top:6px;">
+          Criada por <strong><%= solicitacao.criado_por %></strong>
+        </div>
+      <% } %>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center;">
@@ -48,7 +57,7 @@
       </div>
       <div style="min-width:260px;">
         <div class="k">DATA</div>
-       div class="v"><%= fmtBR(solicitacao.created_at) %></div>
+        <div class="v"><%= fmtBR(solicitacao.created_at) %></div>
       </div>
     </div>
 
@@ -61,9 +70,37 @@
 
     <hr style="border:none; border-top:1px solid #e5e7eb; margin:14px 0;" />
 
-    <div style="color:#6b7280; font-size:13px;">
-      Itens e quantidades: <strong>vamos adicionar na próxima etapa</strong>.
+    <div class="k">ITENS (SOLICITAÇÃO DE MATERIAL)</div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:80px;">#</th>
+          <th>DESCRIÇÃO</th>
+          <th style="width:110px;">UN</th>
+          <th style="width:140px;">QTD</th>
+          <th style="width:260px;">OBS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!itens || itens.length === 0) { %>
+          <tr><td colspan="5" class="muted">Nenhum item adicionado ainda.</td></tr>
+        <% } else { %>
+          <% itens.forEach((it) => { %>
+            <tr>
+              <td class="muted">#<%= it.id %></td>
+              <td><strong><%= it.descricao %></strong></td>
+              <td class="muted"><%= it.unidade %></td>
+              <td><%= it.quantidade %></td>
+              <td class="muted"><%= it.observacao || "" %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+    </table>
+
+    <div class="muted" style="margin-top:10px; font-size:13px;">
+      Próximo passo: botão “Adicionar Item” (quantidade/unidade/obs) direto nesta tela.
     </div>
   </div>
 </div>
-
