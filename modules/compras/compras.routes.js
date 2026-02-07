@@ -1,18 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const ctrl = require("./compras.controller");
+
 const { requireLogin } = require("../auth/auth.middleware");
+const controller = require("./compras.controller");
 
-router.use(requireLogin);
+router.get("/compras", requireLogin, controller.index);
+router.get("/compras/new", requireLogin, controller.newForm);
+router.post("/compras", requireLogin, controller.create);
 
-router.get("/compras", ctrl.index);
-router.get("/compras/new", ctrl.newForm);
-router.post("/compras", ctrl.create);
+router.get("/compras/:id", requireLogin, controller.view);
 
-router.get("/compras/:id", ctrl.view);
-
-// itens
-router.post("/compras/:id/itens", ctrl.addItem);
-router.post("/compras/:id/itens/:itemId/delete", ctrl.removeItem);
+// ✅ ITENS
+router.get("/compras/:id/itens", requireLogin, controller.itensForm);
+router.post("/compras/:id/itens", requireLogin, controller.itensCreate);
+router.post("/compras/:id/itens/:itemId/delete", requireLogin, controller.itensDelete);
 
 module.exports = router;
