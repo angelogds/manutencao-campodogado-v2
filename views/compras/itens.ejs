@@ -1,0 +1,106 @@
+<% layout('layout') %>
+
+<style>
+  .wrap{ max-width:980px; margin:0 auto; }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
+  .muted{ color:#6b7280; }
+  .grid{ display:grid; grid-template-columns: 1fr 120px 140px 1fr; gap:10px; align-items:end; }
+  @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+  label{ font-weight:900; font-size:13px; color:#374151; }
+  input,select{ width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; outline:none; }
+  .btn{ height:40px; padding:0 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; font-weight:900; cursor:pointer; }
+  .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff; }
+  .table{ width:100%; margin-top:14px; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;}
+  .table th,.table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px; vertical-align:middle; }
+  .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em; }
+</style>
+
+<div class="wrap">
+
+  <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1 style="margin:0;">Itens da Solicitação #<%= solicitacao.id %></h1>
+      <div class="muted" style="margin-top:6px;">
+        <strong><%= solicitacao.titulo %></strong> • <%= solicitacao.setor %> • <%= solicitacao.prioridade %>
+      </div>
+      <div class="muted" style="margin-top:6px;">
+        Data: <strong><%= fmtBR(solicitacao.created_at) %></strong>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a class="btn" href="/compras/<%= solicitacao.id %>">Voltar</a>
+      <a class="btn" href="/compras">Lista</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <form method="POST" action="/compras/<%= solicitacao.id %>/itens">
+      <div class="grid">
+        <div>
+          <label>Material / Especificação</label>
+          <input name="descricao" placeholder="Ex: Disco de corte 7&quot; (caixa) / Eletrodo 718 (caixa) / Válvula esférica 2&quot;" required />
+        </div>
+
+        <div>
+          <label>Unid.</label>
+          <select name="unidade">
+            <option value="UN">UN</option>
+            <option value="CX">CX</option>
+            <option value="KG">KG</option>
+            <option value="M">M</option>
+            <option value="LT">LT</option>
+            <option value="PC">PC</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Qtd.</label>
+          <input name="quantidade" type="number" min="0" step="0.01" placeholder="1" required />
+        </div>
+
+        <div>
+          <label>Observação (opcional)</label>
+          <input name="observacao" placeholder="Ex: urgente / reserva / para parada do digestor" />
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary" type="submit">+ Adicionar Item</button>
+        <a class="btn" href="/compras/<%= solicitacao.id %>">Concluir</a>
+      </div>
+    </form>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:80px;">#</th>
+        <th>MATERIAL / ESPECIFICAÇÃO</th>
+        <th style="width:120px;">UNID.</th>
+        <th style="width:140px;">QTD</th>
+        <th style="width:140px;">AÇÕES</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (!itens || itens.length === 0) { %>
+        <tr><td colspan="5" class="muted">Nenhum item adicionado ainda.</td></tr>
+      <% } else { %>
+        <% itens.forEach((it) => { %>
+          <tr>
+            <td><%= it.id %></td>
+            <td><%= it.descricao %><% if (it.observacao) { %><div class="muted" style="font-size:12px; margin-top:4px;"><%= it.observacao %></div><% } %></td>
+            <td><%= it.unidade %></td>
+            <td><strong><%= it.quantidade %></strong></td>
+            <td>
+              <form method="POST" action="/compras/<%= solicitacao.id %>/itens/<%= it.id %>/delete" style="display:inline;">
+                <button class="btn" type="submit">Remover</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+
+</div>
