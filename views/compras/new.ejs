@@ -1,50 +1,49 @@
 <% layout('layout') %>
 
 <style>
-  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; max-width:860px; box-shadow:0 10px 26px rgba(0,0,0,.06); }
-  .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-  .fg{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
-  label{ font-size:12px; color:#6b7280; font-weight:900; letter-spacing:.06em;}
-  input, textarea, select{ border:1px solid #e5e7eb; border-radius:12px; padding:10px 12px; font-size:14px; outline:none; }
-  input:focus, textarea:focus, select:focus{ border-color:#0b6b3a; box-shadow:0 0 0 3px rgba(11,107,58,.12); }
-  .btn{ height:42px; border-radius:12px; border:1px solid #e5e7eb; padding:0 14px; background:#fff; font-weight:900; cursor:pointer; }
-  .btn.primary{ background:#0b6b3a; color:#fff; border-color:#0b6b3a; }
+  .card{ max-width:860px; background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  label{ font-weight:900; font-size:13px; color:#374151; }
+  input,select,textarea{ padding:10px 12px; border:1px solid #d1d5db; border-radius:12px; font-size:14px; outline:none; }
+  textarea{ min-height:120px; resize:vertical; grid-column:1 / -1; }
+  .btn{ padding:12px 14px; border-radius:12px; border:0; background:#0b6b3a; color:#fff; font-weight:900; cursor:pointer; }
 </style>
 
-<h1>Nova Solicitação</h1>
+<h1>Nova Solicitação de Material</h1>
 
 <div class="card">
   <form method="POST" action="/compras">
-    <div class="fg">
-      <label>TÍTULO</label>
-      <input name="titulo" required placeholder="Ex: Material para prensa FAST" />
-    </div>
-
-    <div class="row">
-      <div class="fg">
-        <label>SETOR</label>
-        <input name="setor" required placeholder="manutencao" />
+    <div class="grid">
+      <div class="field" style="grid-column:1/-1;">
+        <label>Título</label>
+        <input name="titulo" placeholder="Ex: Materiais para manutenção Prensa FAST" required />
       </div>
 
-      <div class="fg">
-        <label>PRIORIDADE</label>
+      <div class="field">
+        <label>Setor</label>
+        <input name="setor" placeholder="Ex: VV / Caldeira / Digestores" required />
+      </div>
+
+      <div class="field">
+        <label>Prioridade</label>
         <select name="prioridade">
+          <option value="NORMAL">NORMAL</option>
           <option value="BAIXA">BAIXA</option>
-          <option value="NORMAL" selected>NORMAL</option>
           <option value="ALTA">ALTA</option>
           <option value="URGENTE">URGENTE</option>
         </select>
       </div>
+
+      <div class="field" style="grid-column:1/-1;">
+        <label>Descrição</label>
+        <textarea name="descricao" placeholder="Descreva o motivo / serviço..." required></textarea>
+      </div>
     </div>
 
-    <div class="fg">
-      <label>DESCRIÇÃO</label>
-      <textarea name="descricao" required rows="5" placeholder="Descreva a necessidade..."></textarea>
-    </div>
-
-    <div style="display:flex; gap:10px; justify-content:flex-end;">
-      <a class="btn" href="/compras" style="display:inline-flex; align-items:center; text-decoration:none; color:#111827;">Cancelar</a>
-      <button class="btn primary" type="submit">Criar Solicitação</button>
+    <div style="margin-top:12px; display:flex; gap:10px;">
+      <button class="btn" type="submit">Criar Solicitação</button>
+      <a href="/compras" style="padding:12px 14px; border:1px solid #e5e7eb; border-radius:12px; text-decoration:none; font-weight:900; color:#111827;">Cancelar</a>
     </div>
   </form>
 </div>
