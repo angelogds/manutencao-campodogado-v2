@@ -12,22 +12,20 @@ exports.listOS = ({ status }) => {
 };
 
 exports.createOS = ({ equipamento_id, equipamento, descricao, tipo, opened_by }) => {
-  let equipamentoTxt = equipamento ? String(equipamento).trim() : null;
+  const res = db.prepare(`
+    INSERT INTO os (equipamento_id, equipamento, descricao, tipo, status, opened_by, opened_at)
+    VALUES (?, ?, ?, ?, 'ABERTA', ?, datetime('now','-3 hours'))
+  `).run(
+    equipamento_id || null,
+    String(equipamento || "").trim(), // <-- garante NOT NULL
+    String(descricao || "").trim(),
+    (tipo || "CORRETIVA").toUpperCase(),
+    opened_by
+  );
 
-  // ✅ Se veio equipamento_id mas não veio texto, buscamos na tabela equipamentos
-  if (!equipamentoTxt && equipamento_id) {
-    const eq = db.prepare(`
-      SELECT id, nome, setor, codigo
-      FROM equipamentos
-      WHERE id = ?
-      LIMIT 1
-    `).get(equipamento_id);
+  return res.lastInsertRowid;
+};
 
-    if (!eq) throw new Error("Equipamento não encontrado.");
-
-    equipamentoTxt =
-      `[${eq.setor}] ${eq.nome}` + (eq.codigo ? ` - ${eq.codigo}` : "");
-  }
 
   if (!equipamentoTxt) {
     // ainda protege caso venha tudo vazio
@@ -69,3 +67,4 @@ exports.updateStatus = ({ id, status, userId }) => {
     WHERE id = ?
   `).run(status, closing ? 1 : 0, userId, closing ? 1 : 0, id);
 };
+
