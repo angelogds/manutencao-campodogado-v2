@@ -1,4 +1,3 @@
-
 <% layout('layout') %>
 
 <style>
@@ -7,7 +6,6 @@
   .btn{ cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#111827;}
   .btn.primary{ background:#0b6b3a; border-color:#0b6b3a; color:#fff;}
   .btn.small{ height:34px; padding:0 10px; border-radius:10px; font-size:13px; }
-  .btn.ghost{ background:#fff; }
   .table{ width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;}
   .table th, .table td{ padding:12px 14px; border-bottom:1px solid #f3f4f6; font-size:14px; vertical-align:middle;}
   .table th{ text-align:left; font-size:12px; color:#6b7280; letter-spacing:.06em;}
@@ -21,15 +19,12 @@
   .muted{ color:#6b7280; }
   .link{ font-weight:900; color:#111827; text-decoration:none;}
   .link:hover{ text-decoration:underline; }
-
   tr.rowlink{ cursor:pointer; }
   tr.rowlink:hover td{ background:#f9fafb; }
 </style>
 
 <h1>Compras</h1>
-<p class="muted" style="margin-top:-6px;">
-  Solicitações da Manutenção para o setor de Compras.
-</p>
+<p class="muted" style="margin-top:-6px;">Solicitações da Manutenção para o setor de Compras.</p>
 
 <div class="toolbar">
   <form method="GET" action="/compras" style="display:flex; gap:10px; align-items:center;">
@@ -56,44 +51,28 @@
       <th style="width:200px;">SETOR</th>
       <th style="width:160px;">PRIORIDADE</th>
       <th style="width:160px;">STATUS</th>
-      <th style="width:170px;">DATA</th>
+      <th style="width:190px;">DATA</th>
       <th style="width:120px;">AÇÕES</th>
     </tr>
   </thead>
-
   <tbody>
     <% if (!itens || itens.length === 0) { %>
-      <tr>
-        <td colspan="7" class="muted">Nenhuma solicitação encontrada.</td>
-      </tr>
+      <tr><td colspan="7" class="muted">Nenhuma solicitação encontrada.</td></tr>
     <% } else { %>
       <% itens.forEach((s) => { %>
         <tr class="rowlink" data-href="/compras/<%= s.id %>">
           <td>#<%= s.id %></td>
-
           <td>
-            <a class="link" href="/compras/<%= s.id %>" onclick="event.stopPropagation()">
-              <%= s.titulo %>
-            </a>
+            <a class="link" href="/compras/<%= s.id %>" onclick="event.stopPropagation()"><%= s.titulo %></a>
             <div class="muted" style="font-size:12px; margin-top:4px;">
               <%= s.criado_por ? ("por " + s.criado_por) : "" %>
             </div>
           </td>
-
           <td><%= s.setor %></td>
           <td><%= s.prioridade %></td>
-
-          <td>
-            <span class="badge b-<%= s.status %>"><%= s.status %></span>
-          </td>
-
+          <td><span class="badge b-<%= s.status %>"><%= s.status %></span></td>
           <td class="muted"><%= fmtBR(s.created_at) %></td>
-
-          <td>
-            <a class="btn small ghost" href="/compras/<%= s.id %>" onclick="event.stopPropagation()">
-              Ver
-            </a>
-          </td>
+          <td><a class="btn small" href="/compras/<%= s.id %>" onclick="event.stopPropagation()">Ver</a></td>
         </tr>
       <% }) %>
     <% } %>
