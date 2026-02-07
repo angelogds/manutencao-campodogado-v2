@@ -5,7 +5,7 @@ const service = require("./os.service");
 const equipamentosService = require("../equipamentos/equipamentos.service");
 
 exports.list = (req, res) => {
-  const status = req.query.status || "ABERTA";
+  const status = (req.query.status || "ABERTA").toUpperCase();
   const items = service.listOS({ status });
 
   return res.render("os/index", {
@@ -30,6 +30,7 @@ exports.create = (req, res) => {
   const { equipamento_id, equipamento, descricao, tipo } = req.body;
 
   const equipIdNum = equipamento_id ? Number(equipamento_id) : null;
+  const tipoUp = (tipo || "CORRETIVA").toUpperCase();
 
   if ((!equipIdNum && !equipamento) || !descricao) {
     req.flash("error", "Selecione o equipamento e preencha a descrição.");
@@ -38,15 +39,10 @@ exports.create = (req, res) => {
 
   try {
     const id = service.createOS({
-      // ✅ preferir equipamento_id
-      equipamento_id: equipIdNum || null,
-
-      // ✅ opcional (compatibilidade): se seu service ainda salvar texto
-      // se você NÃO usa mais texto, pode remover essa linha no service depois
-      equipamento: equipamento || null,
-
-      descricao,
-      tipo: (tipo || "CORRETIVA").toUpperCase(),
+      equipamento_id: equipIdNum,
+      equipamento: equipamento ? String(equipamento).trim() : null, // compat
+      descricao: String(descricao).trim(),
+      tipo: tipoUp,
       opened_by: req.session.user.id,
     });
 
@@ -72,11 +68,9 @@ exports.view = (req, res) => {
 
 exports.updateStatus = (req, res) => {
   const id = Number(req.params.id);
-  const { status } = req.body;
+  const st = String(req.body.status || "").toUpperCase();
 
   const allowed = ["ABERTA", "ANDAMENTO", "PAUSADA", "CONCLUIDA", "CANCELADA"];
-  const st = String(status || "").toUpperCase();
-
   if (!allowed.includes(st)) {
     req.flash("error", "Status inválido.");
     return res.redirect(`/os/${id}`);
