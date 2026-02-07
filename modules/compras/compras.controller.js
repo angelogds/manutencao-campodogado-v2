@@ -2,7 +2,7 @@ const service = require("./compras.service");
 
 // GET /compras
 exports.index = (req, res) => {
-  const status = String(req.query.status || "TODOS").toUpperCase();
+  const status = (req.query.status || "TODOS").toUpperCase();
   const itens = service.listSolicitacoes({ status });
 
   return res.render("compras/index", {
@@ -14,20 +14,13 @@ exports.index = (req, res) => {
 
 // GET /compras/new
 exports.newForm = (_req, res) => {
-  return res.render("compras/new", {
-    title: "Nova Solicitação",
-  });
+  return res.render("compras/new", { title: "Nova Solicitação" });
 };
 
 // POST /compras
 exports.create = (req, res) => {
   const { titulo, setor, prioridade, descricao } = req.body;
   const created_by = req.session?.user?.id || null;
-
-  if (!titulo || !setor || !descricao) {
-    req.flash("error", "Preencha Título, Setor e Descrição.");
-    return res.redirect("/compras/new");
-  }
 
   const id = service.createSolicitacao({
     titulo,
@@ -38,7 +31,7 @@ exports.create = (req, res) => {
   });
 
   req.flash("success", "Solicitação criada com sucesso. Agora adicione os itens.");
-  return res.redirect(`/compras/${id}`);
+  return res.redirect(`/compras/${id}/itens`);
 };
 
 // GET /compras/:id
@@ -51,50 +44,62 @@ exports.view = (req, res) => {
     return res.redirect("/compras");
   }
 
-  const itens = service.listItensDaSolicitacao(id);
+  const itens = service.listItensBySolicitacao(id);
 
   return res.render("compras/view", {
     title: `Solicitação #${solicitacao.id}`,
+    solicitacao,
+    itens, // ✅ IMPORTANTE (evita "itens is not defined")
+  });
+};
+
+// GET /compras/:id/itens  (tela para adicionar itens)
+exports.itensForm = (req, res) => {
+  const id = Number(req.params.id);
+  const solicitacao = service.getSolicitacao(id);
+
+  if (!solicitacao) {
+    req.flash("error", "Solicitação não encontrada.");
+    return res.redirect("/compras");
+  }
+
+  const itens = service.listItensBySolicitacao(id);
+
+  return res.render("compras/itens", {
+    title: `Itens da Solicitação #${solicitacao.id}`,
     solicitacao,
     itens,
   });
 };
 
-// POST /compras/:id/itens
-exports.addItem = (req, res) => {
+// POST /compras/:id/itens  (adiciona item)
+exports.itensCreate = (req, res) => {
   const solicitacao_id = Number(req.params.id);
-  const { material, especificacao, quantidade, unidade } = req.body;
+  const { descricao, unidade, quantidade, observacao } = req.body;
 
-  if (!material || !quantidade) {
-    req.flash("error", "Informe Material e Quantidade.");
-    return res.redirect(`/compras/${solicitacao_id}`);
+  try {
+    service.addItemSolicitacao({
+      solicitacao_id,
+      descricao,
+      unidade,
+      quantidade,
+      observacao,
+    });
+
+    req.flash("success", "Item adicionado.");
+    return res.redirect(`/compras/${solicitacao_id}/itens`);
+  } catch (e) {
+    req.flash("error", e.message || "Erro ao adicionar item.");
+    return res.redirect(`/compras/${solicitacao_id}/itens`);
   }
-
-  const qtdNum = Number(quantidade);
-  if (!Number.isFinite(qtdNum) || qtdNum <= 0) {
-    req.flash("error", "Quantidade inválida.");
-    return res.redirect(`/compras/${solicitacao_id}`);
-  }
-
-  service.addItemSolicitacao({
-    solicitacao_id,
-    material,
-    especificacao,
-    quantidade: qtdNum,
-    unidade: unidade || "UN",
-  });
-
-  req.flash("success", "Item adicionado.");
-  return res.redirect(`/compras/${solicitacao_id}`);
 };
 
-// POST /compras/:id/itens/:itemId/delete
-exports.removeItem = (req, res) => {
-  const solicitacaoId = Number(req.params.id);
+// POST /compras/:id/itens/:itemId/delete  (remove item)
+exports.itensDelete = (req, res) => {
+  const solicitacao_id = Number(req.params.id);
   const itemId = Number(req.params.itemId);
 
-  service.removeItemSolicitacao({ itemId, solicitacaoId });
-
+  service.deleteItem(itemId);
   req.flash("success", "Item removido.");
-  return res.redirect(`/compras/${solicitacaoId}`);
+  return res.redirect(`/compras/${solicitacao_id}/itens`);
 };
